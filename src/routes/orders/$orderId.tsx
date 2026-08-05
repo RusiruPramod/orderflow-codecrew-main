@@ -122,6 +122,15 @@ function OrderDetail() {
       });
     }
     await queryClient.invalidateQueries();
+    if (updated.designerId) {
+      await notify({
+        to: "designer",
+        userId: updated.designerId,
+        title: actorRole === "owner" ? "Order updated" : "Quote updated",
+        body: `${updated.code} — ${updated.title} was updated.`,
+        orderId: updated.id,
+      });
+    }
   };
 
   const assign = async (designerId: string) => {
@@ -135,13 +144,6 @@ function OrderDetail() {
       },
       "Order Updated",
     );
-    await notify({
-      to: "designer",
-      userId: designer.id,
-      title: "New order assigned",
-      body: `${order.code} — ${order.title} has been assigned to you.`,
-      orderId: order.id,
-    });
     toast.success(`Assigned to ${designer.name}`);
   };
 
