@@ -5,7 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
  * in project secrets and handed to the browser at runtime through this server fn.
  */
 export const getFirebaseConfig = createServerFn({ method: "GET" }).handler(async () => {
-  const apiKey = (process.env["GOOGLE_API_KEY"] ?? "").trim();
+  const apiKey = (process.env["GOOGLE_API_KEY"] ?? "AIzaSyDbjZxplN1bBp8axZwjM_hWbAdUqLJc2iw").trim();
   return {
     apiKey,
     authDomain: "codecrew-5ea8b.firebaseapp.com",
