@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, CircuitBoard, FileText, Loader2, Lock, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Chrome, CircuitBoard, FileText, Loader2, Lock, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -36,11 +36,12 @@ const HIGHLIGHTS = [
 ];
 
 function LoginPage() {
-  const { user, loading, signIn } = useAuth();
+  const { user, loading, signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("owner@codecrew.dev");
+  const [email, setEmail] = useState("rusirupramod@gmail.com");
   const [password, setPassword] = useState(DEMO_PASSWORD);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -59,6 +60,19 @@ function LoginPage() {
       toast.error(error instanceof Error ? error.message : "Sign in failed");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleBusy(true);
+    try {
+      const profile = await signInWithGoogle();
+      toast.success(`Welcome back, ${profile.name.split(" ")[0]}`);
+      void navigate({ to: profile.role === "owner" ? "/dashboard" : "/designer", replace: true });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Google sign-in failed");
+    } finally {
+      setGoogleBusy(false);
     }
   };
 
@@ -161,14 +175,38 @@ function LoginPage() {
             </Button>
           </form>
 
+          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground uppercase tracking-wide">
+            <span className="h-px flex-1 bg-border" />
+            <span>or</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="h-11 w-full rounded-xl border-border bg-background"
+            onClick={handleGoogleSignIn}
+            disabled={googleBusy}
+          >
+            {googleBusy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <>
+                <Chrome className="size-4" />
+                Continue with Google
+              </>
+            )}
+          </Button>
+
           <div className="mt-8 rounded-2xl border border-dashed border-border p-4">
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Demo accounts
+              Connected accounts
             </p>
             <div className="mt-3 grid gap-2">
               {[
-                { label: "Owner", email: "owner@codecrew.dev" },
-                { label: "Designer", email: "designer@codecrew.dev" },
+                { label: "Owner", email: "rusirupramod@gmail.com" },
+                { label: "Designer", email: "malakathushan@gmail.com" },
               ].map((account) => (
                 <button
                   key={account.email}
@@ -183,11 +221,13 @@ function LoginPage() {
                     <span className="block font-medium">{account.label}</span>
                     <span className="block text-xs text-muted-foreground">{account.email}</span>
                   </span>
-                  <span className="text-xs text-primary">Use</span>
+                  <span className="text-xs text-primary">Sign in</span>
                 </button>
               ))}
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">Password: {DEMO_PASSWORD}</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              Password: {DEMO_PASSWORD} or use Google sign-in if enabled in Firebase.
+            </p>
           </div>
         </motion.div>
       </section>

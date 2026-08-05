@@ -1,12 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getFirebase } from "./firebase";
 import { listUsers, logActivity } from "./db";
+import { seedUsers } from "./seed";
 import type { AppUser, Role } from "./types";
 
 interface AuthState {
   user: AppUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<AppUser>;
+  signInWithGoogle: () => Promise<AppUser>;
   signOut: () => Promise<void>;
   isRole: (role: Role) => boolean;
 }
@@ -15,9 +17,33 @@ const AuthContext = createContext<AuthState | null>(null);
 const SESSION_KEY = "codecrew:session";
 export const DEMO_PASSWORD = "codecrew";
 
+function resolveSeedProfile(email: string): AppUser | null {
+  return seedUsers.find((user) => user.email.toLowerCase() === email.toLowerCase()) ?? null;
+}
+
+async function resolveProfile(email: string): Promise<AppUser | null> {
+  const normalized = email.trim().toLowerCase();
+  const users = await listUsers();
+  return users.find((user) => user.email.toLowerCase() === normalized) ?? resolveSeedProfile(normalized);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const completeSignIn = useCallback(async (profile: AppUser) => {
+    if (!profile.active) throw new Error("This account has been deactivated.");
+
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify(profile));
+    setUser(profile);
+    void logActivity({
+      action: "User Login",
+      detail: `${profile.name} signed in`,
+      userName: profile.name,
+      role: profile.role,
+    });
+    return profile;
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -39,8 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const normalized = email.trim().toLowerCase();
-    const users = await listUsers();
-    const profile = users.find((u) => u.email.toLowerCase() === normalized);
+    const profile = await resolveProfile(normalized);
 
     const fb = await getFirebase();
     if (fb) {
@@ -60,18 +85,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!profile) throw new Error("No CodeCrew profile is linked to this account.");
-    if (!profile.active) throw new Error("This account has been deactivated.");
+    return completeSignIn(profile);
+  }, [completeSignIn]);
 
-    window.localStorage.setItem(SESSION_KEY, JSON.stringify(profile));
-    setUser(profile);
-    void logActivity({
-      action: "User Login",
-      detail: `${profile.name} signed in`,
-      userName: profile.name,
-      role: profile.role,
-    });
-    return profile;
-  }, []);
+  const signInWithGoogle = useCallback(async () => {
+    const fb = await getFirebase();
+    if (!fb) {
+      throw new Error("Google sign-in requires Firebase to be enabled.");
+    }
+
+    const { GoogleAuthProvider, signInWithPopup, signOut: fbSignOut } = await import("firebase/auth");
+    const provider = new GoogleAuthProvider();
+
+    try {
+      const result = await signInWithPopup(fb.auth, provider);
+      const email = result.user.email?.trim().toLowerCase();
+      if (!email) {
+        throw new Error("Your Google account does not expose an email address.");
+      }
+
+      const profile = await resolveProfile(email);
+      if (!profile) {
+        throw new Error("No CodeCrew profile is linked to this Google account.");
+      }
+
+      return await completeSignIn(profile);
+    } catch (error) {
+      try {
+        await fbSignOut(fb.auth);
+      } catch {
+        /* ignore */
+      }
+      throw error instanceof Error ? error : new Error("Google sign-in failed.");
+    }
+  }, [completeSignIn]);
 
   const signOut = useCallback(async () => {
     if (user) {
@@ -100,10 +147,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       signIn,
+      signInWithGoogle,
       signOut,
       isRole: (role: Role) => user?.role === role,
     }),
-    [user, loading, signIn, signOut],
+    [user, loading, signIn, signInWithGoogle, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
