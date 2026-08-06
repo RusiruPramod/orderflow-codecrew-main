@@ -7,7 +7,7 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEMO_PASSWORD, useAuth } from "@/lib/auth";
+import { DEMO_PASSWORD, getRoleHomePath, useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -45,7 +45,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      void navigate({ to: user.role === "owner" ? "/dashboard" : "/designer", replace: true });
+      void navigate({ to: getRoleHomePath(user.role), replace: true });
     }
   }, [loading, user, navigate]);
 
@@ -55,7 +55,7 @@ function LoginPage() {
     try {
       const profile = await signIn(email, password);
       toast.success(`Welcome back, ${profile.name.split(" ")[0]}`);
-      void navigate({ to: profile.role === "owner" ? "/dashboard" : "/designer", replace: true });
+      void navigate({ to: getRoleHomePath(profile.role), replace: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Sign in failed");
     } finally {
@@ -68,7 +68,7 @@ function LoginPage() {
     try {
       const profile = await signInWithGoogle();
       toast.success(`Welcome back, ${profile.name.split(" ")[0]}`);
-      void navigate({ to: profile.role === "owner" ? "/dashboard" : "/designer", replace: true });
+      void navigate({ to: getRoleHomePath(profile.role), replace: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Google sign-in failed");
     } finally {

@@ -8,7 +8,7 @@ import { upsert } from "@/lib/db";
 import { useNotifications } from "@/lib/queries";
 import { relativeTime } from "@/lib/analytics";
 
-export const Route = createFileRoute("/notifications")({
+export const Route = createFileRoute("/designer/notifications")({
   ssr: false,
   head: () => ({
     meta: [

@@ -4,7 +4,7 @@ import { RequireRole } from "@/components/require-role";
 import { useActivity } from "@/lib/queries";
 import { formatDateTime } from "@/lib/analytics";
 
-export const Route = createFileRoute("/activity")({
+export const Route = createFileRoute("/owner/activity")({
   ssr: false,
   head: () => ({
     meta: [

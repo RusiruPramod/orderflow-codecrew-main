@@ -3,7 +3,9 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  useNavigate,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,7 +13,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AuthProvider } from "../lib/auth";
+import { AuthProvider, getRoleHomePath, useAuth } from "../lib/auth";
 import { useDataSync } from "../lib/queries";
 import { Toaster } from "../components/ui/sonner";
 
@@ -131,6 +133,64 @@ function DataSyncBridge() {
   return null;
 }
 
+function RouteGuard() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      if (pathname !== "/") {
+        void navigate({ to: "/", replace: true });
+      }
+      return;
+    }
+
+    const ownerOnlyPaths = [
+      "/owner/dashboard",
+      "/owner/activity",
+      "/owner/designers",
+      "/owner/reports",
+      "/owner/invoices",
+      "/owner/invoices/",
+      "/owner/orders",
+      "/owner/orders/",
+      "/owner/orders/new",
+    ];
+    const designerOnlyPaths = ["/designer/designer", "/designer", "/designer/"];
+    const sharedPrefixes = ["/notifications", "/settings"];
+
+    const isOwnerOnlyPath = ownerOnlyPaths.includes(pathname);
+    const isDesignerOnlyPath = designerOnlyPaths.includes(pathname) || pathname.startsWith("/designer/");
+    const isSharedPath = sharedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+    const isOrderDetailsPath = pathname.startsWith("/orders/") && pathname !== "/orders/new";
+    const isRoleHomePath = pathname === getRoleHomePath(user.role);
+
+    if (pathname === "/") {
+      void navigate({ to: getRoleHomePath(user.role), replace: true });
+      return;
+    }
+
+    if (user.role === "designer" && (isOwnerOnlyPath || (pathname.startsWith("/orders/") && pathname !== "/orders/new" && !isOrderDetailsPath))) {
+      void navigate({ to: getRoleHomePath(user.role), replace: true });
+      return;
+    }
+
+    if (user.role === "owner" && isDesignerOnlyPath) {
+      void navigate({ to: getRoleHomePath(user.role), replace: true });
+      return;
+    }
+
+    if (!isSharedPath && !isOrderDetailsPath && !isOwnerOnlyPath && !isDesignerOnlyPath && !isRoleHomePath) {
+      void navigate({ to: getRoleHomePath(user.role), replace: true });
+    }
+  }, [loading, navigate, pathname, user]);
+
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -138,6 +198,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <DataSyncBridge />
+        <RouteGuard />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster position="top-right" richColors />

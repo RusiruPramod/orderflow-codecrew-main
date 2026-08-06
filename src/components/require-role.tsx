@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth";
+import { getRoleHomePath, useAuth } from "@/lib/auth";
 import type { Role } from "@/lib/types";
 import { Logo } from "@/components/logo";
 
@@ -14,7 +14,7 @@ export function RequireRole({ role, children }: { role: Role | Role[]; children:
     if (!user) {
       void navigate({ to: "/", replace: true });
     } else if (!allowedRoles.includes(user.role)) {
-      void navigate({ to: user.role === "owner" ? "/dashboard" : "/designer", replace: true });
+      void navigate({ to: getRoleHomePath(user.role), replace: true });
     }
   }, [allowedRoles, loading, user, navigate]);
 

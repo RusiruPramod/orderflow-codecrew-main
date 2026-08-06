@@ -6,7 +6,7 @@ import { useOrders, useUsers } from "@/lib/queries";
 import { designerPerformance, formatDate } from "@/lib/analytics";
 import { money } from "@/lib/types";
 
-export const Route = createFileRoute("/designers")({
+export const Route = createFileRoute("/owner/designers")({
   ssr: false,
   head: () => ({
     meta: [

@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/designer/settings")({
   ssr: false,
   head: () => ({
     meta: [

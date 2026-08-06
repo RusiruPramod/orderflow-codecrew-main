@@ -50,7 +50,7 @@ import {
   totalRevenue,
 } from "@/lib/analytics";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/owner/dashboard")({
   ssr: false,
   head: () => ({
     meta: [
@@ -123,7 +123,7 @@ function Dashboard() {
   const perf = designerPerformance(orders).slice(0, 5);
 
   const pipeline = [
-    { label: "Total Orders", value: orders.length, icon: Package, to: "/orders" },
+    { label: "Total Orders", value: orders.length, icon: Package, to: "/owner/orders" },
     { label: "Pending", value: statusCount(orders, ["New", "Assigned", "Under Review"]), icon: Clock },
     { label: "Designer Assigned", value: orders.filter((o) => o.designerId).length, icon: UserCheck },
     { label: "Waiting Pricing", value: statusCount(orders, ["Waiting for Price"]), icon: Hourglass },
@@ -162,7 +162,7 @@ function Dashboard() {
       subtitle="Everything happening across CodeCrew right now"
       actions={
         <Button asChild size="sm" className="hidden rounded-xl sm:inline-flex">
-          <Link to="/orders/new">New order</Link>
+          <Link to="/owner/orders/new">New order</Link>
         </Button>
       }
     >
@@ -260,7 +260,7 @@ function Dashboard() {
           <div className="flex items-center justify-between border-b border-border p-5">
             <h3 className="font-display text-base font-semibold">Recent Orders</h3>
             <Button asChild variant="ghost" size="sm" className="text-primary">
-              <Link to="/orders">
+              <Link to="/owner/orders">
                 View all <ArrowRight className="size-4" />
               </Link>
             </Button>
@@ -269,7 +269,7 @@ function Dashboard() {
             {recent.map((order) => (
               <Link
                 key={order.id}
-                to="/orders/$orderId"
+                to="/owner/orders/$orderId"
                 params={{ orderId: order.id }}
                 className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-muted"
               >

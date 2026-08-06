@@ -8,7 +8,7 @@ import { useOrders } from "@/lib/queries";
 import { formatDate } from "@/lib/analytics";
 import { money, quoteTotal } from "@/lib/types";
 
-export const Route = createFileRoute("/designer/")({
+export const Route = createFileRoute("/designer/designer")({
   ssr: false,
   head: () => ({
     meta: [

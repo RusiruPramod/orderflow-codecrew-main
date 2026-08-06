@@ -26,7 +26,7 @@ export const Route = createFileRoute("/invoices/$orderId")({
 });
 
 function InvoicePage() {
-  const { orderId } = useParams({ from: "/invoices/$orderId" });
+  const { orderId } = useParams({ from: "/owner/invoices/$orderId" });
   const { data: orders = [] } = useOrders();
   const order = orders.find((o) => o.id === orderId);
 

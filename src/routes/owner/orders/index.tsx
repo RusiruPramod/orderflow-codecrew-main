@@ -11,7 +11,7 @@ import { formatDate } from "@/lib/analytics";
 import { finalPrice, money, ORDER_STATUSES, quoteTotal, type OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/orders/")({
+export const Route = createFileRoute("/owner/orders/")({
   ssr: false,
   head: () => ({
     meta: [
@@ -61,7 +61,7 @@ function OrdersPage() {
       subtitle={`${filtered.length} of ${orders.length} orders`}
       actions={
         <Button asChild size="sm" className="hidden rounded-xl sm:inline-flex">
-          <Link to="/orders/new">
+          <Link to="/owner/orders/new">
             <Plus className="size-4" /> New order
           </Link>
         </Button>

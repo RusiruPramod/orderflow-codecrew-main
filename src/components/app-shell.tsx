@@ -32,16 +32,16 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
-  { label: "Orders", to: "/orders", icon: CircuitBoard, roles: ["owner"] },
-  { label: "New Order", to: "/orders/new", icon: Plus, roles: ["owner"] },
-  { label: "Designers", to: "/designers", icon: Users, roles: ["owner"] },
-  { label: "Invoices", to: "/invoices", icon: FileText, roles: ["owner"] },
-  { label: "Reports", to: "/reports", icon: ChartNoAxesCombined, roles: ["owner"] },
-  { label: "Activity", to: "/activity", icon: FolderOpen, roles: ["owner"] },
-  { label: "My Workspace", to: "/designer", icon: LayoutDashboard, roles: ["designer"] },
-  { label: "Notifications", to: "/notifications", icon: Bell, roles: ["owner", "designer"] },
-  { label: "Settings", to: "/settings", icon: Settings, roles: ["owner", "designer"] },
+  { label: "Dashboard", to: "/owner/dashboard", icon: LayoutDashboard, roles: ["owner"] },
+  { label: "Orders", to: "/owner/orders", icon: CircuitBoard, roles: ["owner"] },
+  { label: "New Order", to: "/owner/orders/new", icon: Plus, roles: ["owner"] },
+  { label: "Designers", to: "/owner/designers", icon: Users, roles: ["owner"] },
+  { label: "Invoices", to: "/owner/invoices", icon: FileText, roles: ["owner"] },
+  { label: "Reports", to: "/owner/reports", icon: ChartNoAxesCombined, roles: ["owner"] },
+  { label: "Activity", to: "/owner/activity", icon: FolderOpen, roles: ["owner"] },
+  { label: "My Workspace", to: "/designer/designer", icon: LayoutDashboard, roles: ["designer"] },
+  { label: "Notifications", to: "/designer/notifications", icon: Bell, roles: ["owner", "designer"] },
+  { label: "Settings", to: "/designer/settings", icon: Settings, roles: ["owner", "designer"] },
 ];
 
 export function AppShell({
@@ -65,6 +65,7 @@ export function AppShell({
   useEffect(() => setMobileOpen(false), [pathname]);
 
   const items = useMemo(() => NAV.filter((i) => user && i.roles.includes(user.role)), [user]);
+  const isOwner = user?.role === "owner";
   const unread = notifications.filter(
     (n) => !n.read && user && (n.to === user.role) && (!n.userId || n.userId === user.id),
   ).length;
@@ -90,7 +91,7 @@ export function AppShell({
 
       <nav className="flex-1 space-y-1">
         {items.map((item) => {
-          const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(`${item.to}/`));
+          const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
           return (
             <Link
               key={item.to}
@@ -120,14 +121,14 @@ export function AppShell({
         })}
       </nav>
 
-      {!collapsed && (
+      {!collapsed && isOwner && (
         <div className="rounded-2xl border border-border bg-primary-soft p-4">
           <p className="font-display text-sm font-semibold">Need a fast quote?</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Assign a designer and pricing lands in your inbox.
           </p>
           <Button asChild size="sm" className="mt-3 w-full">
-            <Link to="/orders/new">Create order</Link>
+            <Link to="/owner/orders/new">Create order</Link>
           </Button>
         </div>
       )}
@@ -213,7 +214,7 @@ export function AppShell({
             {actions}
 
             <Link
-              to="/notifications"
+              to="/designer/notifications"
               className="relative rounded-lg p-2 text-muted-foreground hover:bg-secondary"
               aria-label="Notifications"
             >
@@ -225,7 +226,7 @@ export function AppShell({
               )}
             </Link>
 
-            <Link to="/settings" className="flex items-center gap-2.5 rounded-xl px-1.5 py-1 hover:bg-secondary">
+            <Link to="/designer/settings" className="flex items-center gap-2.5 rounded-xl px-1.5 py-1 hover:bg-secondary">
               <span className="grid size-9 place-items-center rounded-full bg-secondary font-display text-sm font-semibold">
                 {user?.name.slice(0, 1)}
               </span>

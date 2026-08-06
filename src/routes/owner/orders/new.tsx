@@ -25,7 +25,7 @@ import { useUsers } from "@/lib/queries";
 import type { FileKind, Order, OrderFile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/orders/new")({
+export const Route = createFileRoute("/owner/orders/new")({
   ssr: false,
   head: () => ({
     meta: [

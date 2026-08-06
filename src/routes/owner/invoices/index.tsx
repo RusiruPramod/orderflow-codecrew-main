@@ -8,7 +8,7 @@ import { useOrders } from "@/lib/queries";
 import { formatDate } from "@/lib/analytics";
 import { finalPrice, money } from "@/lib/types";
 
-export const Route = createFileRoute("/invoices/")({
+export const Route = createFileRoute("/owner/invoices/")({
   ssr: false,
   head: () => ({
     meta: [
@@ -55,7 +55,7 @@ function Invoices() {
                 <td className="px-5 py-3.5 text-right font-semibold">{money(finalPrice(order))}</td>
                 <td className="px-5 py-3.5 text-right">
                   <Button asChild size="sm" variant="outline" className="rounded-xl">
-                    <Link to="/invoices/$orderId" params={{ orderId: order.id }}>
+                    <Link to="/owner/invoices/$orderId" params={{ orderId: order.id }}>
                       <Receipt className="size-4" /> Open
                     </Link>
                   </Button>

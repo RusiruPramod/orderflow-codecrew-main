@@ -8,7 +8,7 @@ import { useExpenses, useOrders } from "@/lib/queries";
 import { designerPerformance, monthlySeries, totalProfit, totalRevenue } from "@/lib/analytics";
 import { finalPrice, money } from "@/lib/types";
 
-export const Route = createFileRoute("/reports")({
+export const Route = createFileRoute("/owner/reports")({
   ssr: false,
   head: () => ({
     meta: [

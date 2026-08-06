@@ -17,6 +17,24 @@ const AuthContext = createContext<AuthState | null>(null);
 const SESSION_KEY = "codecrew:session";
 export const DEMO_PASSWORD = "codecrew";
 
+export function getRoleHomePath(role: Role): string {
+  return role === "owner" ? "/owner/dashboard" : "/designer/designer";
+}
+
+function readStoredSession(): AppUser | null {
+  if (typeof window === "undefined") return null;
+
+  const stored = window.localStorage.getItem(SESSION_KEY);
+  if (!stored) return null;
+
+  try {
+    return JSON.parse(stored) as AppUser;
+  } catch {
+    window.localStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+}
+
 function resolveSeedProfile(email: string): AppUser | null {
   return seedUsers.find((user) => user.email.toLowerCase() === email.toLowerCase()) ?? null;
 }
@@ -28,8 +46,8 @@ async function resolveProfile(email: string): Promise<AppUser | null> {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AppUser | null>(() => readStoredSession());
+  const [loading, setLoading] = useState(() => !readStoredSession());
 
   const completeSignIn = useCallback(async (profile: AppUser) => {
     if (!profile.active) throw new Error("This account has been deactivated.");
@@ -46,21 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      const stored = window.localStorage.getItem(SESSION_KEY);
-      if (stored) {
-        try {
-          if (alive) setUser(JSON.parse(stored) as AppUser);
-        } catch {
-          window.localStorage.removeItem(SESSION_KEY);
-        }
-      }
-      if (alive) setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
+    const stored = readStoredSession();
+    if (stored) {
+      setUser(stored);
+    }
+    setLoading(false);
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {

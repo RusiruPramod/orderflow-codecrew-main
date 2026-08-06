@@ -99,7 +99,7 @@ function OrderDetail() {
         <div className="surface-card p-12 text-center">
           <p className="text-muted-foreground">This order no longer exists.</p>
           <Button asChild className="mt-4 rounded-xl">
-            <Link to="/orders">Back to orders</Link>
+            <Link to="/owner/orders">Back to orders</Link>
           </Button>
         </div>
       </AppShell>
@@ -217,7 +217,7 @@ function OrderDetail() {
       }
     >
       <Button asChild variant="ghost" size="sm" className="mb-3 -ml-2 text-muted-foreground">
-        <Link to="/orders">
+        <Link to="/owner/orders">
           <ArrowLeft className="size-4" /> All orders
         </Link>
       </Button>
