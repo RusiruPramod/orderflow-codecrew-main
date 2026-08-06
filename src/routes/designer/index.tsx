@@ -28,7 +28,18 @@ export const Route = createFileRoute("/designer/")({
 function DesignerPortal() {
   const { user } = useAuth();
   const { data: orders = [] } = useOrders();
-  const mine = orders.filter((o) => o.designerId === user?.id);
+  const mine = orders.filter((order) => {
+    if (!user) return false;
+    const normalizedUserName = user.name.trim().toLowerCase();
+    const normalizedUserEmail = user.email.trim().toLowerCase();
+    const normalizedDesignerName = order.designerName?.trim().toLowerCase();
+
+    return (
+      order.designerId === user.id ||
+      normalizedDesignerName === normalizedUserName ||
+      normalizedDesignerName === normalizedUserEmail
+    );
+  });
 
   return (
     <AppShell title="Designer Portal" subtitle={`${mine.length} orders assigned to you`}>
