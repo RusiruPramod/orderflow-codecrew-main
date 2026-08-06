@@ -159,7 +159,7 @@ function RouteGuard() {
       "/owner/orders/",
       "/owner/orders/new",
     ];
-    const designerOnlyPaths = ["/designer/designer", "/designer", "/designer/"];
+    const designerOnlyPaths = ["/designer", "/designer/"];
     const sharedPrefixes = ["/notifications", "/settings"];
 
     const isOwnerOnlyPath = ownerOnlyPaths.includes(pathname);
@@ -170,6 +170,11 @@ function RouteGuard() {
 
     if (pathname === "/") {
       void navigate({ to: getRoleHomePath(user.role), replace: true });
+      return;
+    }
+
+    if (pathname === "/designer/designer") {
+      void navigate({ to: "/designer", replace: true });
       return;
     }
 

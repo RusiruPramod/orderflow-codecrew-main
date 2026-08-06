@@ -39,7 +39,7 @@ const NAV: NavItem[] = [
   { label: "Invoices", to: "/owner/invoices", icon: FileText, roles: ["owner"] },
   { label: "Reports", to: "/owner/reports", icon: ChartNoAxesCombined, roles: ["owner"] },
   { label: "Activity", to: "/owner/activity", icon: FolderOpen, roles: ["owner"] },
-  { label: "My Workspace", to: "/designer/designer", icon: LayoutDashboard, roles: ["designer"] },
+  { label: "My Workspace", to: "/designer", icon: LayoutDashboard, roles: ["designer"] },
   { label: "Notifications", to: "/designer/notifications", icon: Bell, roles: ["owner", "designer"] },
   { label: "Settings", to: "/designer/settings", icon: Settings, roles: ["owner", "designer"] },
 ];

@@ -18,7 +18,7 @@ const SESSION_KEY = "codecrew:session";
 export const DEMO_PASSWORD = "codecrew";
 
 export function getRoleHomePath(role: Role): string {
-  return role === "owner" ? "/owner/dashboard" : "/designer/designer";
+  return role === "owner" ? "/owner/dashboard" : "/designer";
 }
 
 function readStoredSession(): AppUser | null {
