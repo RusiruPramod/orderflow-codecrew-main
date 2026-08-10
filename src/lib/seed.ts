@@ -50,11 +50,7 @@ interface SeedSpec {
   payment?: Order["paymentStatus"];
 }
 
-const specs: SeedSpec[] = [
-  { code: "CC-2601", title: "IoT Gateway Mainboard v3", customer: { name: "Alicia Gomez", company: "Nordvolt Systems", email: "alicia@nordvolt.io", phone: "+34 611 220 331", country: "Spain" }, status: "Delivered", designer: 1, ageDays: 96, quote: [180, 420, 90], pricing: [120, 210, 40, 25], payment: "Paid" },
-  { code: "CC-2602", title: "Motor Driver 12A Rev B", customer: { name: "Tom Baker", company: "Baker Robotics", email: "tom@bakerrobotics.com", country: "UK" }, status: "Delivered", designer: 2, ageDays: 82, quote: [140, 310, 60], pricing: [90, 160, 20, 0], payment: "Paid" },
- { code: "CC-2614", title: "Legacy Panel Rework", customer: { name: "Marta Silva", company: "Silva Eletro", email: "marta@silvaeletro.br", country: "Brazil" }, status: "Cancelled", ageDays: 44 },
-];
+const specs: SeedSpec[] = [];
 
 export const seedOrders: Order[] = specs.map((s, index) => {
   const designer = s.designer ? seedUsers[s.designer]! : undefined;

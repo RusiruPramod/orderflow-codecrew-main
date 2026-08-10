@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
-import { logActivity, notify, upsert } from "@/lib/db";
+import { logActivity, notify, remove, upsert } from "@/lib/db";
 import { useOrders, useUsers } from "@/lib/queries";
 import { formatDate, formatDateTime } from "@/lib/analytics";
 import {
@@ -76,6 +76,7 @@ function OrderDetail() {
   const { data: orders = [] } = useOrders();
   const { data: users = [] } = useUsers();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const order = orders.find((o) => o.id === orderId);
   const isOwner = user?.role === "owner";
@@ -178,6 +179,24 @@ function OrderDetail() {
     toast.success("Customer price saved");
   };
 
+  const deleteOrder = async () => {
+    if (!order || !window.confirm(`Delete order ${order.code}? This action cannot be undone.`)) return;
+    try {
+      await remove("orders", order.id);
+      await logActivity({
+        action: "Order Deleted",
+        detail: `${order.code} deleted`,
+        userName: user?.name ?? "Owner",
+        role: "owner",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Order deleted");
+      void navigate({ to: "/owner/orders" });
+    } catch {
+      toast.error("Could not delete the order");
+    }
+  };
+
   const submitQuote = async () => {
     if (!isDesigner) return;
     const submitted = {
@@ -209,11 +228,18 @@ function OrderDetail() {
       title={order.title}
       subtitle={`${order.code} · created ${formatDate(order.createdAt)}`}
       actions={
-        <Button asChild size="sm" variant="outline" className="hidden rounded-xl sm:inline-flex">
-          <Link to="/invoices/$orderId" params={{ orderId: order.id }}>
-            <Receipt className="size-4" /> Invoice
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="outline" className="hidden rounded-xl sm:inline-flex">
+            <Link to="/invoices/$orderId" params={{ orderId: order.id }}>
+              <Receipt className="size-4" /> Invoice
+            </Link>
+          </Button>
+          {isOwner && (
+            <Button size="sm" variant="destructive" className="hidden rounded-xl sm:inline-flex" onClick={deleteOrder}>
+              <X className="size-4" /> Delete order
+            </Button>
+          )}
+        </div>
       }
     >
       <Button asChild variant="ghost" size="sm" className="mb-3 -ml-2 text-muted-foreground">
