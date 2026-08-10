@@ -135,12 +135,12 @@ function DataSyncBridge() {
 }
 
 function RouteGuard() {
-  const { user, loading } = useAuth();
+  const { user, loading, firebaseReady } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || !firebaseReady) return;
 
     if (!user) {
       if (pathname !== "/") {

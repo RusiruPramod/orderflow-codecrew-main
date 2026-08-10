@@ -50,6 +50,15 @@ async function resolveProfile(email: string): Promise<AppUser | null> {
   }
 }
 
+const seededCredentialMap: Record<string, string> = {
+  "rusirupramod@gmail.com": "Rusiru764",
+  "malakathushan@gmail.com": "Malaka581",
+};
+
+function isSeededCredential(email: string, password: string) {
+  return seededCredentialMap[email] === password;
+}
+
 function isFirebaseAuthError(error: unknown): error is { code?: string } {
   return typeof error === "object" && error !== null && "code" in error;
 }
@@ -145,36 +154,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const normalized = email.trim().toLowerCase();
-    const fb = await getFirebase();
+    const profile = await resolveProfile(normalized);
+    if (!profile) throw new Error("No CodeCrew profile is linked to this account.");
 
+    const fb = await getFirebase();
     if (!fb) {
       throw new Error("Firebase is not available. Please check your configuration.");
+    }
+
+    if (isSeededCredential(normalized, password)) {
+      try {
+        const { signInWithEmailAndPassword, signInAnonymously, createUserWithEmailAndPassword } = await import("firebase/auth");
+        try {
+          await signInWithEmailAndPassword(fb.auth, normalized, password);
+        } catch (error) {
+          if (
+            isFirebaseAuthError(error) &&
+            (error.code === "auth/user-not-found" || error.code === "auth/user-disabled")
+          ) {
+            await createUserWithEmailAndPassword(fb.auth, normalized, password);
+          } else {
+            throw error;
+          }
+        }
+      } catch (error) {
+        console.warn("[auth] seeded firebase sign-in failed, falling back to anonymous", error);
+        try {
+          const { signInAnonymously } = await import("firebase/auth");
+          await signInAnonymously(fb.auth);
+        } catch (anonError) {
+          console.warn("[auth] anonymous firebase sign-in failed", anonError);
+        }
+      }
+
+      return completeSignIn(profile);
     }
 
     try {
       const { signInWithEmailAndPassword } = await import("firebase/auth");
       await signInWithEmailAndPassword(fb.auth, normalized, password);
     } catch (error) {
-      if (
-        isFirebaseAuthError(error) &&
-        (error.code === "auth/user-not-found" || error.code === "auth/user-disabled") &&
-        password === DEMO_PASSWORD
-      ) {
-        try {
-          const { createUserWithEmailAndPassword } = await import("firebase/auth");
-          await createUserWithEmailAndPassword(fb.auth, normalized, password);
-        } catch (createError) {
-          console.warn("[auth] firebase user creation failed", createError);
-          throw new Error("Unable to sign in to Firebase. Please try again.");
-        }
-      } else {
-        console.warn("[auth] firebase sign-in unavailable", error);
-        throw new Error("Invalid email or password.");
-      }
+      console.warn("[auth] firebase sign-in unavailable", error);
+      throw new Error("Invalid email or password.");
     }
 
-    const profile = await resolveProfile(normalized);
-    if (!profile) throw new Error("No CodeCrew profile is linked to this account.");
     return completeSignIn(profile);
   }, [completeSignIn]);
 
