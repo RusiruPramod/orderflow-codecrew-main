@@ -7,7 +7,7 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEMO_PASSWORD, getRoleHomePath, useAuth } from "@/lib/auth";
+import { getRoleHomePath, useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -38,8 +38,10 @@ const HIGHLIGHTS = [
 function LoginPage() {
   const { user, loading, signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const ownerPassword = "Rusiru764";
+  const designerPassword = "Malaka581";
   const [email, setEmail] = useState("rusirupramod@gmail.com");
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
 
@@ -205,15 +207,15 @@ function LoginPage() {
             </p>
             <div className="mt-3 grid gap-2">
               {[
-                { label: "Owner", email: "rusirupramod@gmail.com" },
-                { label: "Designer", email: "malakathushan@gmail.com" },
+                { label: "Owner", email: "rusirupramod@gmail.com", password: ownerPassword },
+                { label: "Designer", email: "malakathushan@gmail.com", password: designerPassword },
               ].map((account) => (
                 <button
                   key={account.email}
                   type="button"
                   onClick={() => {
                     setEmail(account.email);
-                    setPassword(DEMO_PASSWORD);
+                    setPassword(account.password);
                   }}
                   className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-left text-sm transition-colors hover:border-primary/40 hover:bg-primary-soft"
                 >
@@ -226,7 +228,7 @@ function LoginPage() {
               ))}
             </div>
             <p className="mt-3 text-[11px] text-muted-foreground">
-              Password: {DEMO_PASSWORD} or use Google sign-in if enabled in Firebase.
+              Actual passwords are stored in <strong>password.md</strong>. Google sign-in is enabled in Firebase.
             </p>
           </div>
         </motion.div>

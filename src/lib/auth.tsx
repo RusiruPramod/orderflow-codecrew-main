@@ -106,12 +106,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { onAuthStateChanged } = await import("firebase/auth");
       unsubscribe = onAuthStateChanged(fb.auth, async (firebaseUser) => {
         if (canceled) return;
-        if (firebaseUser?.email) {
+
+        if (!firebaseUser) {
+          setUser(null);
+        } else if (firebaseUser.isAnonymous) {
+          // Keep the existing CodeCrew profile session active while Firebase is using
+          // anonymous auth for Firestore or storage access.
+        } else if (firebaseUser.email) {
           const profile = await resolveProfile(firebaseUser.email);
           setUser(profile);
         } else {
           setUser(null);
         }
+
         setFirebaseReady(true);
         setLoading(false);
       });
