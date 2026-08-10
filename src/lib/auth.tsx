@@ -1,12 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getFirebase } from "./firebase";
-import { listUsers, logActivity, resetFirestoreFallback } from "./db";
-import { seedUsers } from "./seed";
+import { listUsers, logActivity, seedFirestore } from "./db";
 import type { AppUser, Role } from "./types";
 
 interface AuthState {
   user: AppUser | null;
   loading: boolean;
+  firebaseReady: boolean;
   signIn: (email: string, password: string) => Promise<AppUser>;
   signInWithGoogle: () => Promise<AppUser>;
   signOut: () => Promise<void>;
@@ -35,14 +35,10 @@ function readStoredSession(): AppUser | null {
   }
 }
 
-function resolveSeedProfile(email: string): AppUser | null {
-  return seedUsers.find((user) => user.email.toLowerCase() === email.toLowerCase()) ?? null;
-}
-
 async function resolveProfile(email: string): Promise<AppUser | null> {
   const normalized = email.trim().toLowerCase();
   const users = await listUsers();
-  return users.find((user) => user.email.toLowerCase() === normalized) ?? resolveSeedProfile(normalized);
+  return users.find((user) => user.email.toLowerCase() === normalized) ?? null;
 }
 
 function isFirebaseAuthError(error: unknown): error is { code?: string } {
@@ -51,7 +47,9 @@ function isFirebaseAuthError(error: unknown): error is { code?: string } {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(() => readStoredSession());
-  const [loading, setLoading] = useState(() => !readStoredSession());
+  const [loading, setLoading] = useState(true);
+  const [firebaseReady, setFirebaseReady] = useState(false);
+  const seededRef = useRef(false);
 
   const completeSignIn = useCallback(async (profile: AppUser) => {
     if (!profile.active) throw new Error("This account has been deactivated.");
@@ -64,6 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userName: profile.name,
       role: profile.role,
     });
+
+    try {
+      await seedFirestore();
+      seededRef.current = true;
+    } catch (error) {
+      console.warn("[auth] firestore seed failed", error);
+    }
+
     return profile;
   }, []);
 
@@ -72,44 +78,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (stored) {
       setUser(stored);
     }
-    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!user || !firebaseReady || seededRef.current) return;
+    seededRef.current = true;
+
+    void seedFirestore().catch((error) => {
+      console.warn("[auth] firestore seed failed", error);
+    });
+  }, [user, firebaseReady]);
+
+  useEffect(() => {
+    let canceled = false;
+    let unsubscribe: (() => void) | undefined;
+
+    void (async () => {
+      const fb = await getFirebase();
+      if (!fb) {
+        if (!canceled) {
+          setFirebaseReady(true);
+          setLoading(false);
+        }
+        return;
+      }
+
+      const { onAuthStateChanged } = await import("firebase/auth");
+      unsubscribe = onAuthStateChanged(fb.auth, async (firebaseUser) => {
+        if (canceled) return;
+        if (firebaseUser?.email) {
+          const profile = await resolveProfile(firebaseUser.email);
+          setUser(profile);
+        } else {
+          setUser(null);
+        }
+        setFirebaseReady(true);
+        setLoading(false);
+      });
+    })();
+
+    return () => {
+      canceled = true;
+      unsubscribe?.();
+    };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const normalized = email.trim().toLowerCase();
-    const profile = await resolveProfile(normalized);
-
     const fb = await getFirebase();
-    if (fb) {
-      try {
-        const { signInWithEmailAndPassword } = await import("firebase/auth");
-        await signInWithEmailAndPassword(fb.auth, normalized, password);
-        resetFirestoreFallback();
-      } catch (error) {
-        if (
-          isFirebaseAuthError(error) &&
-          (error.code === "auth/user-not-found" || error.code === "auth/user-disabled") &&
-          profile &&
-          password === DEMO_PASSWORD
-        ) {
-          try {
-            const { createUserWithEmailAndPassword } = await import("firebase/auth");
-            await createUserWithEmailAndPassword(fb.auth, normalized, password);
-            resetFirestoreFallback();
-          } catch (createError) {
-            console.warn("[auth] firebase user creation failed", createError);
-          }
-        } else {
-          console.warn("[auth] firebase sign-in unavailable", error);
-          if (!profile || password !== DEMO_PASSWORD) {
-            throw new Error("Invalid email or password.");
-          }
-        }
-      }
-    } else if (!profile || password !== DEMO_PASSWORD) {
-      throw new Error("Invalid email or password.");
+
+    if (!fb) {
+      throw new Error("Firebase is not available. Please check your configuration.");
     }
 
+    try {
+      const { signInWithEmailAndPassword } = await import("firebase/auth");
+      await signInWithEmailAndPassword(fb.auth, normalized, password);
+    } catch (error) {
+      if (
+        isFirebaseAuthError(error) &&
+        (error.code === "auth/user-not-found" || error.code === "auth/user-disabled") &&
+        password === DEMO_PASSWORD
+      ) {
+        try {
+          const { createUserWithEmailAndPassword } = await import("firebase/auth");
+          await createUserWithEmailAndPassword(fb.auth, normalized, password);
+        } catch (createError) {
+          console.warn("[auth] firebase user creation failed", createError);
+          throw new Error("Unable to sign in to Firebase. Please try again.");
+        }
+      } else {
+        console.warn("[auth] firebase sign-in unavailable", error);
+        throw new Error("Invalid email or password.");
+      }
+    }
+
+    await seedFirestore();
+    const profile = await resolveProfile(normalized);
     if (!profile) throw new Error("No CodeCrew profile is linked to this account.");
     return completeSignIn(profile);
   }, [completeSignIn]);
@@ -135,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("No CodeCrew profile is linked to this Google account.");
       }
 
-      resetFirestoreFallback();
+      await seedFirestore();
       return await completeSignIn(profile);
     } catch (error) {
       try {
@@ -173,12 +218,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
+      firebaseReady,
       signIn,
       signInWithGoogle,
       signOut,
       isRole: (role: Role) => user?.role === role,
     }),
-    [user, loading, signIn, signInWithGoogle, signOut],
+    [user, loading, firebaseReady, signIn, signInWithGoogle, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

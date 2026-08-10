@@ -37,7 +37,7 @@ export function getFirebase(): Promise<FirebaseBundle | null> {
           storage: getStorage(app),
         };
       } catch (error) {
-        console.warn("[firebase] falling back to local data layer", error);
+        console.warn("[firebase] initialization failed", error);
         return null;
       }
     })();

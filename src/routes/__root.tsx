@@ -121,9 +121,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        {children}
         <Scripts />
       </body>
     </html>
@@ -131,8 +129,8 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function DataSyncBridge() {
-  const { user, loading } = useAuth();
-  useDataSync(!loading && !!user);
+  const { user, loading, firebaseReady } = useAuth();
+  useDataSync(!loading && firebaseReady && !!user);
   return null;
 }
 
@@ -204,11 +202,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <DataSyncBridge />
-      <RouteGuard />
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-      <Toaster position="top-right" richColors />
+      <AuthProvider>
+        <DataSyncBridge />
+        <RouteGuard />
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        <Toaster position="top-right" richColors />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
