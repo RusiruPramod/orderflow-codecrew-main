@@ -18,10 +18,11 @@ export function useRefresh() {
 
 const DATA_KEYS_PREFIX = "codecrew:";
 
-export function useDataSync() {
+export function useDataSync(enabled: boolean) {
   const qc = useQueryClient();
 
   useEffect(() => {
+    if (!enabled) return;
     const windowAvailable = typeof window !== "undefined";
     if (!windowAvailable) return;
 
@@ -54,5 +55,5 @@ export function useDataSync() {
       window.removeEventListener("storage", handleStorage);
       unsubs.forEach((unsubscribe) => unsubscribe());
     };
-  }, [qc]);
+  }, [qc, enabled]);
 }

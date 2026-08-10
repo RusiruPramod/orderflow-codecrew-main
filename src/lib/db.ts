@@ -73,7 +73,7 @@ function disableFirestore(error: unknown, name: CollectionName) {
   if (isPermissionDenied(error)) {
     if (!disabledCollections.has(name)) {
       disabledCollections.add(name);
-      console.warn(`[db] firestore disabled for ${name}; falling back to local data`);
+      console.warn(`[db] firestore disabled for ${name}; falling back to local data`, error);
     }
   } else if (!disabledCollections.has(name)) {
     console.warn(`[db] firestore operation failed for ${name}`, error);

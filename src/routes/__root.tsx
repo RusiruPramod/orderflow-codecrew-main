@@ -131,7 +131,8 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function DataSyncBridge() {
-  useDataSync();
+  const { user, loading } = useAuth();
+  useDataSync(!loading && !!user);
   return null;
 }
 
