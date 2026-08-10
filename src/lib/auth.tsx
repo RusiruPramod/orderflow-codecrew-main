@@ -38,13 +38,15 @@ function readStoredSession(): AppUser | null {
 
 async function resolveProfile(email: string): Promise<AppUser | null> {
   const normalized = email.trim().toLowerCase();
+  const seededProfile = seedUsers.find((user) => user.email.toLowerCase() === normalized);
+  if (seededProfile) return seededProfile;
 
   try {
     const users = await listUsers();
     return users.find((user) => user.email.toLowerCase() === normalized) ?? null;
   } catch (error) {
     if (isFirebasePermissionError(error)) {
-      return seedUsers.find((user) => user.email.toLowerCase() === normalized) ?? null;
+      return null;
     }
     throw error;
   }
@@ -59,12 +61,39 @@ function isSeededCredential(email: string, password: string) {
   return seededCredentialMap[email] === password;
 }
 
-function isFirebaseAuthError(error: unknown): error is { code?: string } {
+function isFirebaseAuthError(error: unknown): error is { code?: string; message?: string } {
   return typeof error === "object" && error !== null && "code" in error;
 }
 
 function isFirebasePermissionError(error: unknown): error is { code?: string } {
   return isFirebaseAuthError(error) && error.code === "permission-denied";
+}
+
+function getFirebaseAuthErrorMessage(error: unknown): string {
+  if (!isFirebaseAuthError(error)) return "Authentication failed. Please try again.";
+
+  switch (error.code) {
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+      return "Invalid email or password.";
+    case "auth/operation-not-allowed":
+      return "Email/password sign-in is disabled in Firebase. Enable it in the Firebase console.";
+    case "auth/admin-restricted-operation":
+      return "Firebase authentication is restricted for this project. Check the Firebase API key and authentication configuration.";
+    case "auth/email-already-in-use":
+      return "This email is already registered with another sign-in provider. Try Google sign-in or create a matching email/password account in Firebase.";
+    case "auth/invalid-api-key":
+      return "Firebase API key is invalid or unauthorized. Please verify your Firebase setup.";
+    case "auth/unauthorized-domain":
+      return "This app domain is not authorized for Firebase Authentication. Add the domain in Firebase console.";
+    case "auth/popup-closed-by-user":
+    case "auth/cancelled-popup-request":
+      return "Google sign-in was canceled.";
+    case "auth/popup-blocked":
+      return "Google sign-in was blocked by your browser.";
+    default:
+      return error.message || "Authentication failed. Please try again.";
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -159,12 +188,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const fb = await getFirebase();
     if (!fb) {
+      if (isSeededCredential(normalized, password)) {
+        console.warn("[auth] Firebase unavailable; signing in locally with seeded credentials.");
+        return completeSignIn(profile);
+      }
       throw new Error("Firebase is not available. Please check your configuration.");
     }
 
     if (isSeededCredential(normalized, password)) {
       try {
-        const { signInWithEmailAndPassword, signInAnonymously, createUserWithEmailAndPassword } = await import("firebase/auth");
+        const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import("firebase/auth");
         try {
           await signInWithEmailAndPassword(fb.auth, normalized, password);
         } catch (error) {
@@ -173,21 +206,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             (error.code === "auth/user-not-found" || error.code === "auth/user-disabled")
           ) {
             await createUserWithEmailAndPassword(fb.auth, normalized, password);
+          } else if (isFirebaseAuthError(error)) {
+            console.warn("[auth] seeded email/password failed; using local seeded profile instead", error);
+            return completeSignIn(profile);
           } else {
             throw error;
           }
         }
-      } catch (error) {
-        console.warn("[auth] seeded firebase sign-in failed, falling back to anonymous", error);
-        try {
-          const { signInAnonymously } = await import("firebase/auth");
-          await signInAnonymously(fb.auth);
-        } catch (anonError) {
-          console.warn("[auth] anonymous firebase sign-in failed", anonError);
-        }
-      }
 
-      return completeSignIn(profile);
+        return completeSignIn(profile);
+      } catch (error) {
+        console.warn("[auth] seeded firebase sign-in failed; using local seeded profile", error);
+        return completeSignIn(profile);
+      }
     }
 
     try {
@@ -195,7 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signInWithEmailAndPassword(fb.auth, normalized, password);
     } catch (error) {
       console.warn("[auth] firebase sign-in unavailable", error);
-      throw new Error("Invalid email or password.");
+      throw new Error(getFirebaseAuthErrorMessage(error));
     }
 
     return completeSignIn(profile);
@@ -222,13 +253,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("No CodeCrew profile is linked to this Google account.");
       }
 
-      await seedFirestore();
       return await completeSignIn(profile);
     } catch (error) {
       try {
         await fbSignOut(fb.auth);
       } catch {
         /* ignore */
+      }
+      if (isFirebaseAuthError(error)) {
+        throw new Error(getFirebaseAuthErrorMessage(error));
       }
       throw error instanceof Error ? error : new Error("Google sign-in failed.");
     }
