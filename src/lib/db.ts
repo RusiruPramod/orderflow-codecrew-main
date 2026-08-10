@@ -18,7 +18,6 @@ import type { ActivityLog, AppUser, Expense, Notification, Order } from "./types
 
 export type CollectionName = "orders" | "users" | "notifications" | "activity_logs" | "expenses";
 
-let firestoreDisabled = false;
 const disabledCollections = new Set<CollectionName>();
 
 const SEEDS: Record<CollectionName, unknown[]> = {
@@ -66,9 +65,12 @@ function isPermissionDenied(error: unknown): boolean {
   );
 }
 
+function isCollectionDisabled(name: CollectionName) {
+  return disabledCollections.has(name);
+}
+
 function disableFirestore(error: unknown, name: CollectionName) {
   if (isPermissionDenied(error)) {
-    firestoreDisabled = true;
     if (!disabledCollections.has(name)) {
       disabledCollections.add(name);
       console.warn(`[db] firestore disabled for ${name}; falling back to local data`);
@@ -80,7 +82,7 @@ function disableFirestore(error: unknown, name: CollectionName) {
 
 /** Reads a collection from Firestore when configured, otherwise from local storage. */
 export async function listAll<T extends { id: string }>(name: CollectionName): Promise<T[]> {
-  if (firestoreDisabled) return readLocal<T>(name);
+  if (isCollectionDisabled(name)) return readLocal<T>(name);
   const fb = await getFirebase();
   if (fb) {
     try {
@@ -96,7 +98,7 @@ export async function listAll<T extends { id: string }>(name: CollectionName): P
 }
 
 export async function upsert<T extends { id: string }>(name: CollectionName, row: T): Promise<T> {
-  const fb = firestoreDisabled ? null : await getFirebase();
+  const fb = isCollectionDisabled(name) ? null : await getFirebase();
   if (fb) {
     try {
       await setDoc(doc(fb.db, name, row.id), row as Record<string, unknown>, { merge: true });
@@ -113,7 +115,7 @@ export async function upsert<T extends { id: string }>(name: CollectionName, row
 }
 
 export async function remove(name: CollectionName, id: string): Promise<void> {
-  const fb = firestoreDisabled ? null : await getFirebase();
+  const fb = isCollectionDisabled(name) ? null : await getFirebase();
   if (fb) {
     try {
       await deleteDoc(doc(fb.db, name, id));
@@ -137,7 +139,7 @@ export function watchCollection<T extends { id: string }>(
   name: CollectionName,
   onChange: (rows: T[]) => void,
 ): () => void {
-  if (firestoreDisabled) return () => undefined;
+  if (isCollectionDisabled(name)) return () => undefined;
   let closed = false;
   let unsubscribe: (() => void) | undefined;
 
@@ -165,7 +167,6 @@ export function watchCollection<T extends { id: string }>(
 }
 
 export function resetFirestoreFallback() {
-  firestoreDisabled = false;
   disabledCollections.clear();
 }
 

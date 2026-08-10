@@ -22,6 +22,9 @@ export function useDataSync() {
   const qc = useQueryClient();
 
   useEffect(() => {
+    const windowAvailable = typeof window !== "undefined";
+    if (!windowAvailable) return;
+
     const unsubs = [
       watchCollection("orders", () => {
         void qc.invalidateQueries({ queryKey: ["orders"] });
