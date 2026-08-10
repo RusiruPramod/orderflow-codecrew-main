@@ -121,7 +121,9 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Scripts />
       </body>
     </html>
@@ -201,13 +203,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <DataSyncBridge />
-        <RouteGuard />
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Toaster position="top-right" richColors />
-      </AuthProvider>
+      <DataSyncBridge />
+      <RouteGuard />
+      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <Outlet />
+      <Toaster position="top-right" richColors />
     </QueryClientProvider>
   );
 }
