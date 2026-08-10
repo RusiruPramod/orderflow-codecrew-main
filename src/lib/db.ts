@@ -164,6 +164,11 @@ export function watchCollection<T extends { id: string }>(
   };
 }
 
+export function resetFirestoreFallback() {
+  firestoreDisabled = false;
+  disabledCollections.clear();
+}
+
 export async function logActivity(entry: Omit<ActivityLog, "id" | "createdAt">) {
   await upsert<ActivityLog>("activity_logs", {
     ...entry,

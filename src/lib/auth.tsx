@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getFirebase } from "./firebase";
-import { listUsers, logActivity } from "./db";
+import { listUsers, logActivity, resetFirestoreFallback } from "./db";
 import { seedUsers } from "./seed";
 import type { AppUser, Role } from "./types";
 
@@ -45,6 +45,10 @@ async function resolveProfile(email: string): Promise<AppUser | null> {
   return users.find((user) => user.email.toLowerCase() === normalized) ?? resolveSeedProfile(normalized);
 }
 
+function isFirebaseAuthError(error: unknown): error is { code?: string } {
+  return typeof error === "object" && error !== null && "code" in error;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(() => readStoredSession());
   const [loading, setLoading] = useState(() => !readStoredSession());
@@ -80,12 +84,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { signInWithEmailAndPassword } = await import("firebase/auth");
         await signInWithEmailAndPassword(fb.auth, normalized, password);
+        resetFirestoreFallback();
       } catch (error) {
-        // Firebase project may not have this user provisioned yet — fall through
-        // to the local directory so the workspace stays usable.
-        console.warn("[auth] firebase sign-in unavailable", error);
-        if (!profile || password !== DEMO_PASSWORD) {
-          throw new Error("Invalid email or password.");
+        if (
+          isFirebaseAuthError(error) &&
+          (error.code === "auth/user-not-found" || error.code === "auth/user-disabled") &&
+          profile &&
+          password === DEMO_PASSWORD
+        ) {
+          try {
+            const { createUserWithEmailAndPassword } = await import("firebase/auth");
+            await createUserWithEmailAndPassword(fb.auth, normalized, password);
+            resetFirestoreFallback();
+          } catch (createError) {
+            console.warn("[auth] firebase user creation failed", createError);
+          }
+        } else {
+          console.warn("[auth] firebase sign-in unavailable", error);
+          if (!profile || password !== DEMO_PASSWORD) {
+            throw new Error("Invalid email or password.");
+          }
         }
       }
     } else if (!profile || password !== DEMO_PASSWORD) {
@@ -117,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("No CodeCrew profile is linked to this Google account.");
       }
 
+      resetFirestoreFallback();
       return await completeSignIn(profile);
     } catch (error) {
       try {
