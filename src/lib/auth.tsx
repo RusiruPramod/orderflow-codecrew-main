@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getFirebase } from "./firebase";
 import { listUsers, logActivity, seedFirestore } from "./db";
+import { seedUsers } from "./seed";
 import type { AppUser, Role } from "./types";
 
 interface AuthState {
@@ -37,12 +38,24 @@ function readStoredSession(): AppUser | null {
 
 async function resolveProfile(email: string): Promise<AppUser | null> {
   const normalized = email.trim().toLowerCase();
-  const users = await listUsers();
-  return users.find((user) => user.email.toLowerCase() === normalized) ?? null;
+
+  try {
+    const users = await listUsers();
+    return users.find((user) => user.email.toLowerCase() === normalized) ?? null;
+  } catch (error) {
+    if (isFirebasePermissionError(error)) {
+      return seedUsers.find((user) => user.email.toLowerCase() === normalized) ?? null;
+    }
+    throw error;
+  }
 }
 
 function isFirebaseAuthError(error: unknown): error is { code?: string } {
   return typeof error === "object" && error !== null && "code" in error;
+}
+
+function isFirebasePermissionError(error: unknown): error is { code?: string } {
+  return isFirebaseAuthError(error) && error.code === "permission-denied";
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -160,7 +173,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    await seedFirestore();
     const profile = await resolveProfile(normalized);
     if (!profile) throw new Error("No CodeCrew profile is linked to this account.");
     return completeSignIn(profile);
