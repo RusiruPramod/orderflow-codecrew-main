@@ -1326,9 +1326,23 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-only use npm
+## Firebase setup
 
-firebase backend intergrte with file give me
+1. Copy `.env.example` to `.env.local`.
+2. Set `GOOGLE_API_KEY` to your Firebase web app API key.
+3. If you are using your own Firebase project, override the other `FIREBASE_*` values.
+4. Restart the development server.
+
+Example `.env.local`:
+
+```env
+GOOGLE_API_KEY=your_firebase_api_key
+FIREBASE_AUTH_DOMAIN=codecrew-5ea8b.firebaseapp.com
+FIREBASE_PROJECT_ID=codecrew-5ea8b
+FIREBASE_STORAGE_BUCKET=codecrew-5ea8b.firebasestorage.app
+FIREBASE_MESSAGING_SENDER_ID=635170138172
+FIREBASE_APP_ID=1:635170138172:web:048e9fe20074fd45e3bb39
+```
 
 This project was built with [Lovable](https://lovable.dev).
 

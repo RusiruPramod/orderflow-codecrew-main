@@ -2,7 +2,6 @@ import { initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
-import { getFirebaseConfig } from "./firebase.functions";
 
 export interface FirebaseBundle {
   app: FirebaseApp;
@@ -11,27 +10,26 @@ export interface FirebaseBundle {
   storage: FirebaseStorage;
 }
 
+const firebaseConfig = {
+  apiKey: "AIzaSyDbjZxplN1bBp8axZwjM_hWbAdUqLJc2iw",
+  authDomain: "codecrew-5ea8b.firebaseapp.com",
+  projectId: "codecrew-5ea8b",
+  storageBucket: "codecrew-5ea8b.firebasestorage.app",
+  messagingSenderId: "635170138172",
+  appId: "1:635170138172:web:048e9fe20074fd45e3bb39",
+};
+
 let bundlePromise: Promise<FirebaseBundle | null> | null = null;
 
 /**
- * Lazily boots Firebase in the browser. Returns null when no valid API key is
- * configured — the app then runs on the local demo data layer instead.
+ * Lazily boots Firebase in the browser.
  */
 export function getFirebase(): Promise<FirebaseBundle | null> {
   if (typeof window === "undefined") return Promise.resolve(null);
   if (!bundlePromise) {
     bundlePromise = (async () => {
       try {
-        const config = await getFirebaseConfig();
-        if (!config.enabled) return null;
-        const app = initializeApp({
-          apiKey: config.apiKey,
-          authDomain: config.authDomain,
-          projectId: config.projectId,
-          storageBucket: config.storageBucket,
-          messagingSenderId: config.messagingSenderId,
-          appId: config.appId,
-        });
+        const app = initializeApp(firebaseConfig);
         return {
           app,
           auth: getAuth(app),
