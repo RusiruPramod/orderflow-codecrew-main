@@ -24,7 +24,6 @@ export const seedUsers: AppUser[] = [
     specialty: "High-speed 4–8 layer routing",
     phone: "+94 77 555 1201",
   },
-  
 ];
 
 function files(prefix: string) {
@@ -102,15 +101,14 @@ export const seedOrders: Order[] = specs.map((s, index) => {
 });
 
 export const seedNotifications: Notification[] = [
-  { id: "n1", to: "owner", title: "Designer submitted pricing", body: "Ishara Fernando submitted a quote for CC-2608.", orderId: "o-CC-2608", read: false, createdAt: iso(0.2) },
-  { id: "n2", to: "owner", title: "Files uploaded", body: "Marek Nowak uploaded revised gerbers for CC-2610.", orderId: "o-CC-2610", read: false, createdAt: iso(0.5) },
-   
+  { id: "n1", to: "owner", title: "Designer submitted pricing", body: "Malaka Thushan submitted a quote for CC-2608.", orderId: "o-CC-2608", read: false, createdAt: iso(0.2) },
+  { id: "n2", to: "owner", title: "Files uploaded", body: "Malaka Thushan uploaded revised gerbers for CC-2610.", orderId: "o-CC-2610", read: false, createdAt: iso(0.5) },
 ];
 
 export const seedActivity: ActivityLog[] = [
-  { id: "a1", action: "Order Created", detail: "CC-2613 Test Jig Adapter created", userName: "Nuwan Perera", role: "owner", createdAt: iso(0.1) },
-  { id: "a2", action: "Price Submitted", detail: "Quote of $693 submitted for CC-2608", userName: "Ishara Fernando", role: "designer", createdAt: iso(0.4) },
-   { id: "a6", action: "User Login", detail: "Signed in from 102.54.11.9", userName: "Ishara Fernando", role: "designer", createdAt: iso(3) },
+  { id: "a1", action: "Order Created", detail: "CC-2613 Test Jig Adapter created", userName: "Owner", role: "owner", createdAt: iso(0.1) },
+  { id: "a2", action: "Price Submitted", detail: "Quote of $693 submitted for CC-2608", userName: "Malaka Thushan", role: "designer", createdAt: iso(0.4) },
+  { id: "a6", action: "User Login", detail: "Signed in from 102.54.11.9", userName: "Malaka Thushan", role: "designer", createdAt: iso(3) },
 ];
 
 export const seedExpenses: Expense[] = [

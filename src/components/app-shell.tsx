@@ -35,7 +35,7 @@ const NAV: NavItem[] = [
   { label: "Dashboard", to: "/owner/dashboard", icon: LayoutDashboard, roles: ["owner"] },
   { label: "Orders", to: "/owner/orders", icon: CircuitBoard, roles: ["owner"] },
   { label: "New Order", to: "/owner/orders/new", icon: Plus, roles: ["owner"] },
-  { label: "Designers", to: "/owner/designers", icon: Users, roles: ["owner"] },
+  { label: "Designer", to: "/owner/designers", icon: Users, roles: ["owner"] },
   { label: "Invoices", to: "/owner/invoices", icon: FileText, roles: ["owner"] },
   { label: "Reports", to: "/owner/reports", icon: ChartNoAxesCombined, roles: ["owner"] },
   { label: "Activity", to: "/owner/activity", icon: FolderOpen, roles: ["owner"] },

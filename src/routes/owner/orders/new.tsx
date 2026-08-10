@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -69,6 +69,7 @@ function NewOrder() {
   const { user } = useAuth();
   const { data: users = [] } = useUsers();
   const designers = users.filter((u) => u.role === "designer" && u.active);
+  const hasInitializedDesigner = useRef(false);
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -96,6 +97,13 @@ function NewOrder() {
   });
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
+
+  useEffect(() => {
+    if (!hasInitializedDesigner.current && designers.length === 1) {
+      setDesignerId(designers[0].id);
+      hasInitializedDesigner.current = true;
+    }
+  }, [designers]);
 
   const canContinue = useMemo(() => {
     if (step === 0) return form.name.trim() && form.email.trim();
@@ -324,7 +332,13 @@ function NewOrder() {
                 <button
                   key={designer.id}
                   type="button"
-                  onClick={() => setDesignerId(designer.id === designerId ? "" : designer.id)}
+                  onClick={() => {
+                    if (designers.length === 1) {
+                      setDesignerId(designers[0].id);
+                      return;
+                    }
+                    setDesignerId(designer.id === designerId ? "" : designer.id);
+                  }}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border p-4 text-left transition-colors",
                     designerId === designer.id
@@ -344,7 +358,7 @@ function NewOrder() {
               ))}
               <div className="flex items-center gap-2 rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground sm:col-span-2">
                 <UserPlus className="size-4" />
-                Leave unassigned to keep the order in the New queue.
+                This order will be assigned to Malaka Thushan by default.
               </div>
             </div>
           )}

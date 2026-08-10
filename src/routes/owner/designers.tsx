@@ -10,10 +10,10 @@ export const Route = createFileRoute("/owner/designers")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Designers — CodeCrew PCB ERP" },
-      { name: "description", content: "Manage outsourced PCB designers, workload and performance." },
-      { property: "og:title", content: "Designers — CodeCrew PCB ERP" },
-      { property: "og:description", content: "Outsourced designer roster and performance." },
+      { title: "Designer — CodeCrew PCB ERP" },
+      { name: "description", content: "Manage your PCB designer and workload." },
+      { property: "og:title", content: "Designer — CodeCrew PCB ERP" },
+      { property: "og:description", content: "Single-designer roster and performance." },
     ],
   }),
   component: () => (
@@ -30,7 +30,7 @@ function Designers() {
   const designers = users.filter((u) => u.role === "designer");
 
   return (
-    <AppShell title="Designers" subtitle={`${designers.filter((d) => d.active).length} active collaborators`}>
+    <AppShell title="Designer" subtitle={`${designers.filter((d) => d.active).length} active collaborator`}>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {designers.map((designer) => {
           const stats = perf.find((p) => p.name === designer.name);

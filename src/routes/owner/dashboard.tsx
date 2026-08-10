@@ -295,7 +295,7 @@ function Dashboard() {
           <div className="surface-card p-5">
             <div className="flex items-center gap-2">
               <Users className="size-4 text-primary" />
-              <h3 className="font-display text-base font-semibold">Active Designers</h3>
+              <h3 className="font-display text-base font-semibold">Active Designer</h3>
               <span className="ml-auto font-display text-lg font-semibold">
                 {users.filter((u) => u.role === "designer" && u.active).length}
               </span>
