@@ -248,7 +248,7 @@ function NewOrder() {
       }
       await queryClient.invalidateQueries();
       toast.success(`Order ${code} created`);
-      void navigate({ to: "/orders/$orderId", params: { orderId: order.id } });
+      void navigate({ to: "/owner/orders" });
     } catch {
       toast.error("Could not create the order");
     } finally {

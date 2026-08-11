@@ -19,7 +19,9 @@ import { useAuth } from "@/lib/auth";
 import { useOrders } from "@/lib/queries";
 import { formatDate, formatDateTime } from "@/lib/analytics";
 import { money, quoteTotal, type Order } from "@/lib/types";
-import { CircuitBoard, FileText, Download, Phone, UserCog, Layers, Trash2 } from "lucide-react";
+import { getDownloadUrlFn } from "@/lib/r2Fns";
+import { toast } from "sonner";
+import { CircuitBoard, FileText, Download, Phone, UserCog, Layers, Trash2, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/designer/")({
   ssr: false,
@@ -42,6 +44,7 @@ function DesignerPortal() {
   const { user } = useAuth();
   const { data: orders = [] } = useOrders();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   const mine = orders
     .filter((order) => {
@@ -191,9 +194,31 @@ function DesignerPortal() {
                     {selectedOrder.files.slice(0, 4).map((file) => (
                       <div key={file.id} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm">
                         <span className="truncate flex-1">{file.name}</span>
-                        <a href={file.url ?? "#"} className="text-muted-foreground hover:text-primary">
-                          <Download className="size-4" />
-                        </a>
+                        <button
+                          type="button"
+                          disabled={downloadingFileId === file.id}
+                          onClick={async () => {
+                            const storageKey = selectedOrder.pcbFile?.storageKey || `orders/${selectedOrder.code}/${file.name}`;
+                            try {
+                              setDownloadingFileId(file.id);
+                              const { downloadUrl } = await getDownloadUrlFn({ data: { storageKey } });
+                              window.open(downloadUrl, "_blank");
+                            } catch (err) {
+                              console.error(err);
+                              toast.error("Failed to download file from Cloudflare R2");
+                            } finally {
+                              setDownloadingFileId(null);
+                            }
+                          }}
+                          className="text-muted-foreground hover:text-primary disabled:opacity-50"
+                          title={`Download ${file.name}`}
+                        >
+                          {downloadingFileId === file.id ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Download className="size-4" />
+                          )}
+                        </button>
                       </div>
                     ))}
                     {selectedOrder.files.length > 4 && (
