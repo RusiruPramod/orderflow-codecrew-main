@@ -78,22 +78,22 @@ function NewOrder() {
   const [designerId, setDesignerId] = useState<string>("");
   const [form, setForm] = useState({
     name: "",
-    company: "",
-    email: "",
-    phone: "",
-    country: "",
+    addressLine1: "",
+    addressLine2: "",
+    telephone1: "",
+    telephone2: "",
     address: "",
     title: "",
     description: "",
     requirements: "",
-    layers: "2",
-    quantity: "10",
-    material: "FR-4 TG150",
+    layers: "1",
+    quantity: "1",
+    material: "Copper Clad",
     thickness: "1.6 mm",
-    surfaceFinish: "HASL",
+    surfaceFinish: "Sticker With",
     color: "Green",
     notes: "",
-    dueDate: "",
+    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   });
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
