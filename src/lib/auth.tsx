@@ -220,9 +220,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           if (
             isFirebaseAuthError(error) &&
-            (error.code === "auth/user-not-found" || error.code === "auth/user-disabled")
+            (error.code === "auth/user-not-found" ||
+             error.code === "auth/user-disabled" ||
+             error.code === "auth/invalid-credential" ||
+             error.code === "auth/invalid-login-credentials")
           ) {
-            await createUserWithEmailAndPassword(fb.auth, normalized, password);
+            try {
+              await createUserWithEmailAndPassword(fb.auth, normalized, password);
+            } catch {
+              // Ignore if creation fails (e.g. user already exists) and proceed with local profile
+            }
           } else if (isFirebaseAuthError(error)) {
             console.warn("[auth] seeded email/password failed; using local seeded profile instead", error);
             return completeSignIn(profile);
