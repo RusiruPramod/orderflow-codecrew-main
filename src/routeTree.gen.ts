@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CustomerOrderRouteImport } from './routes/customer-order'
 import { Route as DesignerIndexRouteImport } from './routes/designer/index'
 import { Route as DesignerNotificationsRouteImport } from './routes/designer/notifications'
 import { Route as DesignerSettingsRouteImport } from './routes/designer/settings'
@@ -19,6 +20,7 @@ import { Route as OwnerActivityRouteImport } from './routes/owner/activity'
 import { Route as OwnerDashboardRouteImport } from './routes/owner/dashboard'
 import { Route as OwnerDesignersRouteImport } from './routes/owner/designers'
 import { Route as OwnerReportsRouteImport } from './routes/owner/reports'
+import { Route as OwnerSettingsRouteImport } from './routes/owner/settings'
 import { Route as OwnerInvoicesIndexRouteImport } from './routes/owner/invoices/index'
 import { Route as OwnerOrdersIndexRouteImport } from './routes/owner/orders/index'
 import { Route as OwnerOrdersNewRouteImport } from './routes/owner/orders/new'
@@ -26,6 +28,11 @@ import { Route as OwnerOrdersNewRouteImport } from './routes/owner/orders/new'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerOrderRoute = CustomerOrderRouteImport.update({
+  id: '/customer-order',
+  path: '/customer-order',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignerIndexRoute = DesignerIndexRouteImport.update({
@@ -73,6 +80,11 @@ const OwnerReportsRoute = OwnerReportsRouteImport.update({
   path: '/owner/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnerSettingsRoute = OwnerSettingsRouteImport.update({
+  id: '/owner/settings',
+  path: '/owner/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OwnerInvoicesIndexRoute = OwnerInvoicesIndexRouteImport.update({
   id: '/owner/invoices/',
   path: '/owner/invoices/',
@@ -91,6 +103,7 @@ const OwnerOrdersNewRoute = OwnerOrdersNewRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/customer-order': typeof CustomerOrderRoute
   '/designer/notifications': typeof DesignerNotificationsRoute
   '/designer/settings': typeof DesignerSettingsRoute
   '/invoices/$orderId': typeof InvoicesOrderIdRoute
@@ -99,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/designers': typeof OwnerDesignersRoute
   '/owner/reports': typeof OwnerReportsRoute
+  '/owner/settings': typeof OwnerSettingsRoute
   '/designer/': typeof DesignerIndexRoute
   '/owner/orders/new': typeof OwnerOrdersNewRoute
   '/owner/invoices/': typeof OwnerInvoicesIndexRoute
@@ -106,6 +120,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/customer-order': typeof CustomerOrderRoute
   '/designer/notifications': typeof DesignerNotificationsRoute
   '/designer/settings': typeof DesignerSettingsRoute
   '/invoices/$orderId': typeof InvoicesOrderIdRoute
@@ -114,6 +129,7 @@ export interface FileRoutesByTo {
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/designers': typeof OwnerDesignersRoute
   '/owner/reports': typeof OwnerReportsRoute
+  '/owner/settings': typeof OwnerSettingsRoute
   '/designer': typeof DesignerIndexRoute
   '/owner/orders/new': typeof OwnerOrdersNewRoute
   '/owner/invoices': typeof OwnerInvoicesIndexRoute
@@ -122,6 +138,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/customer-order': typeof CustomerOrderRoute
   '/designer/notifications': typeof DesignerNotificationsRoute
   '/designer/settings': typeof DesignerSettingsRoute
   '/invoices/$orderId': typeof InvoicesOrderIdRoute
@@ -130,6 +147,7 @@ export interface FileRoutesById {
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/designers': typeof OwnerDesignersRoute
   '/owner/reports': typeof OwnerReportsRoute
+  '/owner/settings': typeof OwnerSettingsRoute
   '/designer/': typeof DesignerIndexRoute
   '/owner/orders/new': typeof OwnerOrdersNewRoute
   '/owner/invoices/': typeof OwnerInvoicesIndexRoute
@@ -139,6 +157,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/customer-order'
     | '/designer/notifications'
     | '/designer/settings'
     | '/invoices/$orderId'
@@ -147,6 +166,7 @@ export interface FileRouteTypes {
     | '/owner/dashboard'
     | '/owner/designers'
     | '/owner/reports'
+    | '/owner/settings'
     | '/designer/'
     | '/owner/orders/new'
     | '/owner/invoices/'
@@ -154,6 +174,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/customer-order'
     | '/designer/notifications'
     | '/designer/settings'
     | '/invoices/$orderId'
@@ -162,6 +183,7 @@ export interface FileRouteTypes {
     | '/owner/dashboard'
     | '/owner/designers'
     | '/owner/reports'
+    | '/owner/settings'
     | '/designer'
     | '/owner/orders/new'
     | '/owner/invoices'
@@ -169,6 +191,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/customer-order'
     | '/designer/notifications'
     | '/designer/settings'
     | '/invoices/$orderId'
@@ -177,6 +200,7 @@ export interface FileRouteTypes {
     | '/owner/dashboard'
     | '/owner/designers'
     | '/owner/reports'
+    | '/owner/settings'
     | '/designer/'
     | '/owner/orders/new'
     | '/owner/invoices/'
@@ -185,6 +209,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CustomerOrderRoute: typeof CustomerOrderRoute
   DesignerNotificationsRoute: typeof DesignerNotificationsRoute
   DesignerSettingsRoute: typeof DesignerSettingsRoute
   InvoicesOrderIdRoute: typeof InvoicesOrderIdRoute
@@ -193,6 +218,7 @@ export interface RootRouteChildren {
   OwnerDashboardRoute: typeof OwnerDashboardRoute
   OwnerDesignersRoute: typeof OwnerDesignersRoute
   OwnerReportsRoute: typeof OwnerReportsRoute
+  OwnerSettingsRoute: typeof OwnerSettingsRoute
   DesignerIndexRoute: typeof DesignerIndexRoute
   OwnerOrdersNewRoute: typeof OwnerOrdersNewRoute
   OwnerInvoicesIndexRoute: typeof OwnerInvoicesIndexRoute
@@ -206,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer-order': {
+      id: '/customer-order'
+      path: '/customer-order'
+      fullPath: '/customer-order'
+      preLoaderRoute: typeof CustomerOrderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/designer/': {
@@ -271,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OwnerReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/owner/settings': {
+      id: '/owner/settings'
+      path: '/owner/settings'
+      fullPath: '/owner/settings'
+      preLoaderRoute: typeof OwnerSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/owner/invoices/': {
       id: '/owner/invoices/'
       path: '/owner/invoices'
@@ -297,6 +337,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CustomerOrderRoute: CustomerOrderRoute,
   DesignerNotificationsRoute: DesignerNotificationsRoute,
   DesignerSettingsRoute: DesignerSettingsRoute,
   InvoicesOrderIdRoute: InvoicesOrderIdRoute,
@@ -305,6 +346,7 @@ const rootRouteChildren: RootRouteChildren = {
   OwnerDashboardRoute: OwnerDashboardRoute,
   OwnerDesignersRoute: OwnerDesignersRoute,
   OwnerReportsRoute: OwnerReportsRoute,
+  OwnerSettingsRoute: OwnerSettingsRoute,
   DesignerIndexRoute: DesignerIndexRoute,
   OwnerOrdersNewRoute: OwnerOrdersNewRoute,
   OwnerInvoicesIndexRoute: OwnerInvoicesIndexRoute,

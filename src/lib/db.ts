@@ -2,6 +2,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   setDoc,
@@ -14,9 +15,10 @@ import {
   seedOrders,
   seedUsers,
 } from "./seed";
-import type { ActivityLog, AppUser, Expense, Notification, Order } from "./types";
+import type { ActivityLog, AppUser, Expense, Notification, Order, PricingSettings } from "./types";
+import { DEFAULT_PRICING } from "./types";
 
-export type CollectionName = "orders" | "users" | "notifications" | "activity_logs" | "expenses";
+export type CollectionName = "orders" | "users" | "notifications" | "activity_logs" | "expenses" | "settings";
 
 const localCache: Record<CollectionName, Record<string, unknown>[]> = {
   users: [...seedUsers],
@@ -24,6 +26,7 @@ const localCache: Record<CollectionName, Record<string, unknown>[]> = {
   notifications: [...seedNotifications],
   activity_logs: [...seedActivity],
   expenses: [...seedExpenses],
+  settings: [],
 };
 
 function cloneRows<T extends { id: string }>(rows: T[]): T[] {
@@ -176,4 +179,33 @@ export function nextOrderCode(orders: Order[]): string {
     .filter((n) => Number.isFinite(n));
   const max = numbers.length ? Math.max(...numbers) : 2600;
   return `CC-${max + 1}`;
+}
+
+export async function getPricingSettings(): Promise<PricingSettings> {
+  try {
+    const db = await getAppDb();
+    const snap = await getDoc(doc(db, "settings", "pricing"));
+    if (snap.exists()) {
+      const data = snap.data() as PricingSettings;
+      return {
+        deliveryFee: data.deliveryFee ?? DEFAULT_PRICING.deliveryFee,
+        stickerFee: data.stickerFee ?? DEFAULT_PRICING.stickerFee,
+        pricePerSqInch: data.pricePerSqInch ?? DEFAULT_PRICING.pricePerSqInch,
+      };
+    }
+    return { ...DEFAULT_PRICING };
+  } catch (error) {
+    console.warn("[db] getPricingSettings failed, using defaults", error);
+    return { ...DEFAULT_PRICING };
+  }
+}
+
+export async function savePricingSettings(settings: PricingSettings): Promise<void> {
+  try {
+    const db = await getAppDb();
+    await setDoc(doc(db, "settings", "pricing"), settings as Record<string, unknown>);
+  } catch (error) {
+    console.error("[db] savePricingSettings failed", error);
+    throw error;
+  }
 }

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { listActivity, listExpenses, listNotifications, listOrders, listUsers, watchCollection } from "./db";
+import { getPricingSettings, listActivity, listExpenses, listNotifications, listOrders, listUsers, watchCollection } from "./db";
 
 export const useOrders = () => useQuery({ queryKey: ["orders"], queryFn: listOrders });
 export const useUsers = () => useQuery({ queryKey: ["users"], queryFn: listUsers });
@@ -8,7 +8,7 @@ export const useNotifications = () =>
   useQuery({ queryKey: ["notifications"], queryFn: listNotifications });
 export const useActivity = () => useQuery({ queryKey: ["activity"], queryFn: listActivity });
 export const useExpenses = () => useQuery({ queryKey: ["expenses"], queryFn: listExpenses });
-
+export const usePricingSettings = () => useQuery({ queryKey: ["pricing-settings"], queryFn: getPricingSettings });
 export function useRefresh() {
   const qc = useQueryClient();
   return () => {
@@ -41,6 +41,9 @@ export function useDataSync(enabled: boolean) {
       }),
       watchCollection("expenses", () => {
         void qc.invalidateQueries({ queryKey: ["expenses"] });
+      }),
+      watchCollection("settings", () => {
+        void qc.invalidateQueries({ queryKey: ["pricing-settings"] });
       }),
     ];
 

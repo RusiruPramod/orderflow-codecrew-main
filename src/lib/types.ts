@@ -105,6 +105,17 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   dueDate?: string;
+  /** Where the order originated: "owner" (default) or "customer-form" */
+  source?: "owner" | "customer-form";
+  /** Additional charges auto-calculated from pricing settings */
+  additionalCharges?: {
+    deliveryFee: number;
+    stickerFee: number;
+    stickerOption: "with" | "without";
+    pcbPrintPrice?: number;
+  };
+  pcbLength?: number;
+  pcbWidth?: number;
 }
 
 export interface AppUser {
@@ -193,3 +204,21 @@ export function money(n: number): string {
     maximumFractionDigits: 2,
   }).format(Number.isFinite(n) ? n : 0);
 }
+
+export function moneyLKR(n: number): string {
+  const val = Number.isFinite(n) ? n : 0;
+  return `LKR ${val.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** System-wide pricing settings configurable by the owner */
+export interface PricingSettings {
+  deliveryFee: number;
+  stickerFee: number;
+  pricePerSqInch: number;
+}
+
+export const DEFAULT_PRICING: PricingSettings = {
+  deliveryFee: 500,
+  stickerFee: 300,
+  pricePerSqInch: 100,
+};

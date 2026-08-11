@@ -145,7 +145,7 @@ function RouteGuard() {
     if (loading || !firebaseReady || !authInitialized) return;
 
     if (!user) {
-      if (pathname !== "/") {
+      if (pathname !== "/" && !pathname.startsWith("/customer-order")) {
         void navigate({ to: "/", replace: true });
       }
       return;
@@ -191,7 +191,7 @@ function RouteGuard() {
       return;
     }
 
-    if (!isSharedPath && !isOrderDetailsPath && !isOwnerOnlyPath && !isDesignerOnlyPath && !isRoleHomePath) {
+    if (!isSharedPath && !isOrderDetailsPath && !isOwnerOnlyPath && !isDesignerOnlyPath && !isRoleHomePath && !pathname.startsWith("/customer-order")) {
       void navigate({ to: getRoleHomePath(user.role), replace: true });
     }
   }, [loading, navigate, pathname, user, firebaseReady, authInitialized]);
