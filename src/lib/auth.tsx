@@ -15,7 +15,7 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-const SESSION_KEY = "codecrew:session";
+const SESSION_KEY = "codecrew:session"; // using localStorage
 export const DEMO_PASSWORD = "codecrew";
 
 export function getRoleHomePath(role: Role): string {
@@ -31,7 +31,7 @@ function readStoredSession(): AppUser | null {
   try {
     return JSON.parse(stored) as AppUser;
   } catch {
-    window.localStorage.removeItem(SESSION_KEY);
+    window.sessionStorage.removeItem(SESSION_KEY);
     return null;
   }
 }
