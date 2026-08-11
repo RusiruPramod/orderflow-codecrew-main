@@ -181,6 +181,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // New effect: If Firebase auth already has a user after a page refresh, restore the CodeCrew profile
+  useEffect(() => {
+    if (!firebaseReady) return; // wait until Firebase is initialized
+    void (async () => {
+      const fb = await getFirebase();
+      if (!fb) return;
+      const { currentUser } = fb.auth;
+      if (currentUser && currentUser.email && !user) {
+        const profile = await resolveProfile(currentUser.email);
+        if (profile) setUser(profile);
+      }
+    })();
+  }, [firebaseReady, user]);
+
   const signIn = useCallback(async (email: string, password: string) => {
     const normalized = email.trim().toLowerCase();
     const profile = await resolveProfile(normalized);
