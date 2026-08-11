@@ -186,9 +186,9 @@ function NewOrder() {
 
             // Keep display metadata (no URL — files live in R2)
             orderFiles.push({ ...meta, id: `f-${code}-${i}` });
-          } catch (uploadErr) {
+          } catch (uploadErr: any) {
             console.error(uploadErr);
-            toast.error(`Failed to upload ${meta.name}. Order not created.`);
+            toast.error(uploadErr?.message ? `Upload failed: ${uploadErr.message}` : `Failed to upload ${meta.name}.`);
             setSaving(false);
             setUploadProgress(null);
             return;
