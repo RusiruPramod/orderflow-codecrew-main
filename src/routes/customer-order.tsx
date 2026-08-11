@@ -59,8 +59,6 @@ function CustomerOrderForm() {
     addressLine1: "",
     material: "Copper Clad",
     stickerOption: "Without Sticker" as "With Sticker" | "Without Sticker",
-    pcbLength: "",
-    pcbWidth: "",
   });
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
@@ -84,13 +82,7 @@ function CustomerOrderForm() {
   const deliveryFee = settings.deliveryFee;
   const stickerFee = form.stickerOption === "With Sticker" ? settings.stickerFee : 0;
 
-  const parsedLength = parseFloat(form.pcbLength) || 0;
-  const parsedWidth = parseFloat(form.pcbWidth) || 0;
-  const pcbPrintPrice = parsedLength * parsedWidth * settings.pricePerSqInch;
-
-  const totalPricing = deliveryFee + stickerFee + pcbPrintPrice;
-
-  const canSubmit = form.name.trim() && form.telephone1.trim() && form.addressLine1.trim() && files.length > 0 && parsedLength > 0 && parsedWidth > 0;
+  const canSubmit = form.name.trim() && form.telephone1.trim() && form.addressLine1.trim() && files.length > 0;
 
   const submit = async () => {
     if (!canSubmit) return;
@@ -203,16 +195,19 @@ function CustomerOrderForm() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
         <div className="w-full max-w-md surface-card p-8 text-center rounded-3xl shadow-xl border border-border">
-          <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-green-500/10">
-            <Check className="size-8 text-green-600" />
+          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-green-500/10">
+            <Check className="size-10 text-green-600" />
           </div>
-          <h1 className="font-display text-2xl font-bold mb-2">Order Submitted Successfully!</h1>
-          <p className="text-muted-foreground mb-8">
-            Thank you for your order, {form.name}. Our team will review your files and contact you shortly.
+          <h1 className="font-display text-2xl font-bold mb-3">Order Submitted!</h1>
+          <p className="text-muted-foreground text-base mb-4">
+            Thank you, <span className="font-semibold text-foreground">{form.name}</span>!
           </p>
-          <Button onClick={() => window.location.reload()} className="rounded-xl w-full">
-            Submit Another Order
-          </Button>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Your order has been received. Our team will review your files, calculate the final cost, and contact you shortly with a quote.
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
+            <span>CodeCrew PCB Services</span>
+          </div>
         </div>
       </div>
     );
@@ -316,27 +311,7 @@ function CustomerOrderForm() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Length (inches) *</Label>
-                <Input
-                  type="number"
-                  value={form.pcbLength}
-                  onChange={(e) => set("pcbLength", e.target.value)}
-                  className="h-11 rounded-xl"
-                  placeholder="e.g. 2"
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label>Width (inches) *</Label>
-                <Input
-                  type="number"
-                  value={form.pcbWidth}
-                  onChange={(e) => set("pcbWidth", e.target.value)}
-                  className="h-11 rounded-xl"
-                  placeholder="e.g. 3"
-                />
-              </div>
             </div>
           </div>
 
