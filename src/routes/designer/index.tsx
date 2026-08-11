@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/auth";
 import { useOrders } from "@/lib/queries";
 import { formatDate, formatDateTime } from "@/lib/analytics";
 import { money, quoteTotal, type Order } from "@/lib/types";
-import { getDownloadUrlFn } from "@/lib/r2Fns";
+import { downloadR2File, getDownloadUrlFn } from "@/lib/r2Fns";
 import { toast } from "sonner";
 import { CircuitBoard, FileText, Download, Phone, UserCog, Layers, Trash2, Loader2 } from "lucide-react";
 
@@ -201,20 +201,23 @@ function DesignerPortal() {
                             const storageKey = selectedOrder.pcbFile?.storageKey || `orders/${selectedOrder.code}/${file.name}`;
                             try {
                               setDownloadingFileId(file.id);
-                              const { downloadUrl } = await getDownloadUrlFn({ data: { storageKey } });
-                              window.open(downloadUrl, "_blank");
+                              await downloadR2File(storageKey, file.name);
+                              toast.success(`Downloaded ${file.name}`);
                             } catch (err) {
                               console.error(err);
-                              toast.error("Failed to download file from Cloudflare R2");
+                              toast.error(`Failed to download ${file.name}`);
                             } finally {
                               setDownloadingFileId(null);
                             }
                           }}
-                          className="text-muted-foreground hover:text-primary disabled:opacity-50"
+                          className="flex items-center gap-1 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
                           title={`Download ${file.name}`}
                         >
                           {downloadingFileId === file.id ? (
-                            <Loader2 className="size-4 animate-spin" />
+                            <>
+                              <Loader2 className="size-4 animate-spin text-primary" />
+                              <span className="text-xs text-primary font-medium">Downloading...</span>
+                            </>
                           ) : (
                             <Download className="size-4" />
                           )}

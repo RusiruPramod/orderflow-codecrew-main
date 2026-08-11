@@ -49,6 +49,8 @@ export const getUploadUrlFn = createServerFn({ method: "POST" })
 const downloadInput = z.object({
   /** R2 object key, e.g. "orders/CC-2601/gerber.zip" */
   storageKey: z.string().min(1),
+  /** Original file name for Content-Disposition header, e.g. "PCB.json" */
+  fileName: z.string().optional(),
 });
 
 export type DownloadUrlInput = z.infer<typeof downloadInput>;
@@ -61,6 +63,41 @@ export type DownloadUrlResult = {
 export const getDownloadUrlFn = createServerFn({ method: "POST" })
   .validator((data: unknown) => downloadInput.parse(data))
   .handler(async ({ data }): Promise<DownloadUrlResult> => {
-    const downloadUrl = await createDownloadUrl(data.storageKey);
+    const downloadUrl = await createDownloadUrl(data.storageKey, data.fileName);
     return { downloadUrl };
   });
+
+/**
+ * Helper to download an R2 file directly to the user's computer without opening a new tab or navigating.
+ */
+export async function downloadR2File(storageKey: string, fileName: string) {
+  const { downloadUrl } = await getDownloadUrlFn({ data: { storageKey, fileName } });
+
+  try {
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.style.display = "none";
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  } catch (fetchErr) {
+    console.warn("Direct blob download failed, falling back to presigned URL trigger:", fetchErr);
+    const link = document.createElement("a");
+    link.style.display = "none";
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+}
+

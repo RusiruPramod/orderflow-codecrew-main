@@ -57,11 +57,15 @@ export async function createUploadUrl(
  * Generate a 5-minute presigned GET URL so a designer can download
  * a file from R2 without making the bucket public.
  */
-export async function createDownloadUrl(fileKey: string): Promise<string> {
+export async function createDownloadUrl(fileKey: string, fileName?: string): Promise<string> {
   const client = getR2Client();
   const command = new GetObjectCommand({
     Bucket: BUCKET(),
     Key: fileKey,
+    ResponseContentDisposition: fileName
+      ? `attachment; filename="${fileName.replace(/"/g, "_")}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
+      : undefined,
   });
   return getSignedUrl(client, command, { expiresIn: 300 }); // 5 min
 }
+
