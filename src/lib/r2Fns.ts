@@ -33,8 +33,14 @@ export const getUploadUrlFn = createServerFn({ method: "POST" })
   .validator((data: unknown) => uploadInput.parse(data))
   .handler(async ({ data }): Promise<UploadUrlResult> => {
     const fileKey = `orders/${data.orderCode}/${data.fileName}`;
-    const uploadUrl = await createUploadUrl(fileKey, data.contentType);
-    return { uploadUrl, fileKey };
+    console.log(`[R2 Server] Generating upload URL for key: ${fileKey}`);
+    try {
+      const uploadUrl = await createUploadUrl(fileKey, data.contentType);
+      return { uploadUrl, fileKey };
+    } catch (err) {
+      console.error("[R2 Server Error] Failed to generate presigned upload URL:", err);
+      throw err;
+    }
   });
 
 // ---------------------------------------------------------------------------
