@@ -135,12 +135,12 @@ function DataSyncBridge() {
 }
 
 function RouteGuard() {
-  const { user, loading, firebaseReady } = useAuth();
+  const { user, loading, firebaseReady, authInitialized } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
-    if (loading || !firebaseReady) return;
+    if (loading || !firebaseReady || !authInitialized) return;
 
     if (!user) {
       if (pathname !== "/") {
@@ -192,7 +192,7 @@ function RouteGuard() {
     if (!isSharedPath && !isOrderDetailsPath && !isOwnerOnlyPath && !isDesignerOnlyPath && !isRoleHomePath) {
       void navigate({ to: getRoleHomePath(user.role), replace: true });
     }
-  }, [loading, navigate, pathname, user]);
+  }, [loading, navigate, pathname, user, firebaseReady, authInitialized]);
 
   return null;
 }

@@ -8,6 +8,7 @@ interface AuthState {
   user: AppUser | null;
   loading: boolean;
   firebaseReady: boolean;
+  authInitialized: boolean;
   signIn: (email: string, password: string) => Promise<AppUser>;
   signInWithGoogle: () => Promise<AppUser>;
   signOut: () => Promise<void>;
@@ -100,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(() => readStoredSession());
   const [loading, setLoading] = useState(true);
   const [firebaseReady, setFirebaseReady] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const seededRef = useRef(false);
 
   const completeSignIn = useCallback(async (profile: AppUser) => {
@@ -150,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!canceled) {
           setFirebaseReady(true);
           setLoading(false);
+          setAuthInitialized(true);
         }
         return;
       }
@@ -308,12 +311,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       firebaseReady,
+      authInitialized,
       signIn,
       signInWithGoogle,
       signOut,
       isRole: (role: Role) => user?.role === role,
     }),
-    [user, loading, firebaseReady, signIn, signInWithGoogle, signOut],
+    [user, loading, firebaseReady, authInitialized, signIn, signInWithGoogle, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
