@@ -41,7 +41,7 @@ const NAV: NavItem[] = [
   { label: "Activity", to: "/owner/activity", icon: FolderOpen, roles: ["owner"] },
   { label: "My Workspace", to: "/designer", icon: LayoutDashboard, roles: ["designer"] },
   { label: "Notifications", to: "/designer/notifications", icon: Bell, roles: ["owner", "designer"] },
-  { label: "Settings", to: "/designer/settings", icon: Settings, roles: ["owner", "designer"] },
+  { label: "Settings", to: "/designer/settings", icon: Settings, roles: ["designer"] },
 ];
 
 export function AppShell({

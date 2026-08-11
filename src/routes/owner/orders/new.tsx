@@ -9,6 +9,7 @@ import {
   FileArchive,
   FileText,
   Image as ImageIcon,
+  Plus,
   Trash2,
   UserPlus,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { listOrders, logActivity, nextOrderCode, notify, upsert } from "@/lib/db";
 import { useUsers } from "@/lib/queries";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { FileKind, Order, OrderFile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -74,6 +76,7 @@ function NewOrder() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [showPhone2, setShowPhone2] = useState(false);
   const [files, setFiles] = useState<OrderFile[]>([]);
   const [designerId, setDesignerId] = useState<string>("");
   const [form, setForm] = useState({
@@ -82,7 +85,6 @@ function NewOrder() {
     addressLine2: "",
     telephone1: "",
     telephone2: "",
-    address: "",
     title: "",
     description: "",
     requirements: "",
@@ -106,7 +108,7 @@ function NewOrder() {
   }, [designers]);
 
   const canContinue = useMemo(() => {
-    if (step === 0) return form.name.trim() && form.email.trim();
+    if (step === 0) return form.name.trim() && form.addressLine1.trim() && form.telephone1.trim();
     if (step === 1) return form.title.trim() && form.description.trim();
     return true;
   }, [step, form]);
@@ -136,11 +138,10 @@ function NewOrder() {
         code,
         customer: {
           name: form.name,
-          company: form.company,
-          email: form.email,
-          phone: form.phone,
-          country: form.country,
-          address: form.address,
+          addressLine1: form.addressLine1,
+          addressLine2: form.addressLine2,
+          telephone1: form.telephone1,
+          telephone2: form.telephone2,
         },
         title: form.title,
         description: form.description,
@@ -225,11 +226,24 @@ function NewOrder() {
           {step === 0 && (
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Customer name *" value={form.name} onChange={(v) => set("name", v)} />
-              <Field label="Company" value={form.company} onChange={(v) => set("company", v)} />
-              <Field label="Email *" type="email" value={form.email} onChange={(v) => set("email", v)} />
-              <Field label="Phone" value={form.phone} onChange={(v) => set("phone", v)} />
-              <Field label="Country" value={form.country} onChange={(v) => set("country", v)} />
-              <Field label="Delivery address" value={form.address} onChange={(v) => set("address", v)} />
+              <Field label="Address Line 1 *" value={form.addressLine1} onChange={(v) => set("addressLine1", v)} />
+              <Field label="Address Line 2" value={form.addressLine2} onChange={(v) => set("addressLine2", v)} />
+              
+              <div className="space-y-2">
+                <Label>Telephone Number 1 *</Label>
+                <div className="flex gap-2">
+                  <Input value={form.telephone1} onChange={(e) => set("telephone1", e.target.value)} className="h-11 rounded-xl" />
+                  {!showPhone2 && (
+                    <Button type="button" variant="outline" className="h-11 px-3" onClick={() => setShowPhone2(true)} title="Add another phone">
+                      <Plus className="size-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {showPhone2 && (
+                <Field label="Telephone Number 2" value={form.telephone2} onChange={(v) => set("telephone2", v)} />
+              )}
             </div>
           )}
 
@@ -260,9 +274,34 @@ function NewOrder() {
               </div>
               <Field label="Layers" type="number" value={form.layers} onChange={(v) => set("layers", v)} />
               <Field label="Quantity" type="number" value={form.quantity} onChange={(v) => set("quantity", v)} />
-              <Field label="Material" value={form.material} onChange={(v) => set("material", v)} />
+              
+              <div className="space-y-2">
+                <Label>Material</Label>
+                <Select value={form.material} onValueChange={(v) => set("material", v)}>
+                  <SelectTrigger className="h-11 rounded-xl bg-background">
+                    <SelectValue placeholder="Select material" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Copper Clad">Copper Clad</SelectItem>
+                    <SelectItem value="FR4">FR4</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Field label="Thickness" value={form.thickness} onChange={(v) => set("thickness", v)} />
-              <Field label="Surface finish" value={form.surfaceFinish} onChange={(v) => set("surfaceFinish", v)} />
+              
+              <div className="space-y-2">
+                <Label>Surface finish</Label>
+                <Select value={form.surfaceFinish} onValueChange={(v) => set("surfaceFinish", v)}>
+                  <SelectTrigger className="h-11 rounded-xl bg-background">
+                    <SelectValue placeholder="Select finish" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Sticker With">Sticker With</SelectItem>
+                    <SelectItem value="Sticker Without">Sticker Without</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Field label="Solder mask colour" value={form.color} onChange={(v) => set("color", v)} />
               <Field label="Target due date" type="date" value={form.dueDate} onChange={(v) => set("dueDate", v)} />
             </div>
@@ -365,7 +404,7 @@ function NewOrder() {
 
           {step === 4 && (
             <div className="space-y-4 text-sm">
-              <Summary title="Customer" rows={[["Name", form.name], ["Company", form.company], ["Email", form.email], ["Country", form.country]]} />
+              <Summary title="Customer" rows={[["Name", form.name], ["Telephone", form.telephone1], ["Address", form.addressLine1]]} />
               <Summary
                 title="PCB"
                 rows={[

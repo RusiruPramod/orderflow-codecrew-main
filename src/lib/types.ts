@@ -62,11 +62,10 @@ export interface OwnerPricing {
 
 export interface Customer {
   name: string;
-  company?: string;
-  email: string;
-  phone?: string;
-  country?: string;
-  address?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  telephone1?: string;
+  telephone2?: string;
 }
 
 export interface Order {

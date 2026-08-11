@@ -123,14 +123,23 @@ function OrderDetail() {
       });
     }
     await queryClient.invalidateQueries();
-    if (updated.designerId) {
-      await notify({
-        to: "designer",
-        userId: updated.designerId,
-        title: actorRole === "owner" ? "Order updated" : "Quote updated",
-        body: `${updated.code} — ${updated.title} was updated.`,
-        orderId: updated.id,
-      });
+    if (updated.designerId && activity) {
+      if (actorRole === "owner") {
+        await notify({
+          to: "designer",
+          userId: updated.designerId,
+          title: "Order updated",
+          body: `${updated.code} — ${updated.title} was updated by owner.`,
+          orderId: updated.id,
+        });
+      } else {
+        await notify({
+          to: "owner",
+          title: "Order updated",
+          body: `${updated.code} — ${updated.title} was updated by designer.`,
+          orderId: updated.id,
+        });
+      }
     }
   };
 
@@ -471,19 +480,21 @@ function OrderDetail() {
           <div className="surface-card p-5">
             <h3 className="font-display text-base font-semibold">Customer</h3>
             <p className="mt-3 text-sm font-medium">{order.customer.name}</p>
-            <p className="text-xs text-muted-foreground">{order.customer.company}</p>
+            {order.customer.addressLine1 && (
+              <p className="text-xs text-muted-foreground">{order.customer.addressLine1}</p>
+            )}
+            {order.customer.addressLine2 && (
+              <p className="text-xs text-muted-foreground">{order.customer.addressLine2}</p>
+            )}
             <div className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <p className="flex items-center gap-2">
-                <Mail className="size-4" /> {order.customer.email}
-              </p>
-              {order.customer.phone && (
+              {order.customer.telephone1 && (
                 <p className="flex items-center gap-2">
-                  <Phone className="size-4" /> {order.customer.phone}
+                  <Phone className="size-4" /> {order.customer.telephone1}
                 </p>
               )}
-              {order.customer.country && (
+              {order.customer.telephone2 && (
                 <p className="flex items-center gap-2">
-                  <MapPin className="size-4" /> {order.customer.country}
+                  <Phone className="size-4" /> {order.customer.telephone2}
                 </p>
               )}
             </div>
