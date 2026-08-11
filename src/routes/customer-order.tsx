@@ -421,7 +421,23 @@ function CustomerOrderForm() {
                       </span>
                     )}
                   </span>
-                  <span className="font-medium">{moneyLKR(pcbPrintPrice)}</span>
+                  <span className="font-medium text-muted-foreground flex items-center h-full">
+                    {(parsedLength === 0 || parsedWidth === 0) ? (
+                      <div className="w-16 h-1.5 bg-primary/10 rounded-full overflow-hidden relative">
+                        <div className="absolute top-0 bottom-0 bg-primary/50 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s infinite ease-in-out' }} />
+                      </div>
+                    ) : (
+                      <span className="text-foreground">{moneyLKR(pcbPrintPrice)}</span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-muted-foreground">PCB Design Cost</span>
+                  <span className="font-medium text-muted-foreground flex items-center h-full">
+                    <div className="w-16 h-1.5 bg-primary/10 rounded-full overflow-hidden relative">
+                      <div className="absolute top-0 bottom-0 bg-primary/50 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s infinite ease-in-out' }} />
+                    </div>
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="text-muted-foreground">Delivery Fee</span>
@@ -437,10 +453,25 @@ function CustomerOrderForm() {
                 <div className="pt-4 mt-2 border-t border-primary/20">
                   <div className="flex justify-between items-end">
                     <div>
-                      <div className="text-xs font-semibold tracking-wide text-primary uppercase mb-1">Base Total</div>
-                      <span className="text-3xl font-display font-bold text-foreground">
-                        {moneyLKR(totalPricing)}
-                      </span>
+                      <div className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">Final Total</div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-32 h-2 bg-primary/10 rounded-full overflow-hidden relative">
+                          <div
+                            className="absolute top-0 bottom-0 bg-primary/50 rounded-full"
+                            style={{
+                              width: '40%',
+                              animation: 'indeterminate 1.5s infinite ease-in-out'
+                            }}
+                          />
+                          <style>{`
+                            @keyframes indeterminate {
+                              0% { transform: translateX(-100%); }
+                              100% { transform: translateX(300%); }
+                            }
+                          `}</style>
+                        </div>
+                        <span className="text-sm font-medium text-muted-foreground"></span>
+                      </div>
                     </div>
                   </div>
                 </div>
