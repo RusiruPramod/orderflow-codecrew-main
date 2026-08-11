@@ -16,6 +16,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider, getRoleHomePath, useAuth } from "../lib/auth";
 import { useDataSync } from "../lib/queries";
 import { Toaster } from "../components/ui/sonner";
+import { Analytics } from "@vercel/analytics/react";
 
 function NotFoundComponent() {
   return (
@@ -122,6 +123,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <Analytics />
         <Scripts />
       </body>
     </html>
