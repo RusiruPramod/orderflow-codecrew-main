@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { getAuth, setPersistence, browserSessionPersistence, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
@@ -30,9 +30,12 @@ export function getFirebase(): Promise<FirebaseBundle | null> {
     bundlePromise = (async () => {
       try {
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        // Ensure auth state is persisted per tab/session, not across tabs
+        await setPersistence(auth, browserSessionPersistence);
         return {
           app,
-          auth: getAuth(app),
+          auth,
           db: getFirestore(app),
           storage: getStorage(app),
         };

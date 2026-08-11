@@ -15,7 +15,7 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-const SESSION_KEY = "codecrew:session"; // using localStorage
+const SESSION_KEY = "codecrew:session"; // using sessionStorage
 export const DEMO_PASSWORD = "codecrew";
 
 export function getRoleHomePath(role: Role): string {
@@ -25,7 +25,7 @@ export function getRoleHomePath(role: Role): string {
 function readStoredSession(): AppUser | null {
   if (typeof window === "undefined") return null;
 
-  const stored = window.localStorage.getItem(SESSION_KEY);
+  const stored = window.sessionStorage.getItem(SESSION_KEY);
   if (!stored) return null;
 
   try {
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeSignIn = useCallback(async (profile: AppUser) => {
     if (!profile.active) throw new Error("This account has been deactivated.");
 
-    window.localStorage.setItem(SESSION_KEY, JSON.stringify(profile));
+    window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(profile));
     setUser(profile);
     void logActivity({
       action: "User Login",
@@ -285,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         /* ignore */
       }
     }
-    window.localStorage.removeItem(SESSION_KEY);
+    window.sessionStorage.removeItem(SESSION_KEY);
     setUser(null);
   }, [user]);
 
