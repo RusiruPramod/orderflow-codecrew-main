@@ -365,7 +365,9 @@ function OrderDetail() {
                     type="button"
                     disabled={downloadingFileId === file.id}
                     onClick={async () => {
-                      const storageKey = order.pcbFile?.storageKey || `orders/${order.code}/${file.name}`;
+                      const storageKey = (order.pcbFile && order.pcbFile.fileName === file.name)
+                        ? order.pcbFile.storageKey
+                        : `orders/${order.code}/${file.name}`;
                       try {
                         setDownloadingFileId(file.id);
                         await downloadR2File(storageKey, file.name);

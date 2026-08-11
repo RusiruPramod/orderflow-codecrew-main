@@ -198,7 +198,9 @@ function DesignerPortal() {
                           type="button"
                           disabled={downloadingFileId === file.id}
                           onClick={async () => {
-                            const storageKey = selectedOrder.pcbFile?.storageKey || `orders/${selectedOrder.code}/${file.name}`;
+                            const storageKey = (selectedOrder.pcbFile && selectedOrder.pcbFile.fileName === file.name)
+                              ? selectedOrder.pcbFile.storageKey
+                              : `orders/${selectedOrder.code}/${file.name}`;
                             try {
                               setDownloadingFileId(file.id);
                               await downloadR2File(storageKey, file.name);
