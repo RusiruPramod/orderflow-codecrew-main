@@ -65,7 +65,7 @@ export async function upsert<T extends { id: string }>(name: CollectionName, row
     const collectionRef = getLocalCollectionRef<T>(name);
     const existingIndex = collectionRef.findIndex((item) => item.id === row.id);
     const cloned = { ...row };
-    if (existingIndex >= 0) {
+    if (existingIndex > -1) {
       collectionRef[existingIndex] = cloned;
     } else {
       collectionRef.push(cloned);
@@ -83,7 +83,7 @@ export async function remove(name: CollectionName, id: string): Promise<void> {
     console.warn(`[db] remove(${name}, ${id}) failed, using local fallback`, error);
     const collectionRef = getLocalCollectionRef<Record<string, unknown>>(name);
     const index = collectionRef.findIndex((item) => item.id === id);
-    if (index >= 0) collectionRef.splice(index, 1);
+    if (index > -1) collectionRef.splice(index, 1);
   }
 }
 
