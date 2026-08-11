@@ -111,8 +111,4 @@ export const seedActivity: ActivityLog[] = [
   { id: "a6", action: "User Login", detail: "Signed in from 102.54.11.9", userName: "Malaka Thushan", role: "designer", createdAt: iso(3) },
 ];
 
-export const seedExpenses: Expense[] = [
-  { id: "e1", label: "Fab house batch — JLC", amount: 1840, category: "Production", date: iso(12) },
-  { id: "e2", label: "Designer payouts", amount: 2650, category: "Outsourcing", date: iso(20) },
-
-];
+export const seedExpenses: Expense[] = [];
