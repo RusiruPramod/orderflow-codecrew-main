@@ -165,11 +165,11 @@ function NewOrder() {
             const uploadRes = await fetch(uploadUrl, {
               method: "PUT",
               body: raw,
-              headers: { "Content-Type": raw.type || "application/octet-stream" },
             });
 
             if (!uploadRes.ok) {
-              throw new Error(`R2 upload failed for ${meta.name}: ${uploadRes.status}`);
+              const errText = await uploadRes.text().catch(() => "");
+              throw new Error(`R2 upload failed (${uploadRes.status}): ${errText || uploadRes.statusText}`);
             }
 
             // Save R2 metadata for the primary (first) file

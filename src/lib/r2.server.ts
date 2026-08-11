@@ -49,7 +49,6 @@ export async function createUploadUrl(
   const command = new PutObjectCommand({
     Bucket: BUCKET(),
     Key: fileKey,
-    ContentType: contentType,
   });
   return getSignedUrl(client, command, { expiresIn: 900 }); // 15 min
 }
