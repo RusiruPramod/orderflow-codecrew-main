@@ -9,6 +9,7 @@ import {
   FileArchive,
   FileText,
   Image as ImageIcon,
+  Loader2,
   Plus,
   Trash2,
   UserPlus,
@@ -24,7 +25,8 @@ import { useAuth } from "@/lib/auth";
 import { listOrders, logActivity, nextOrderCode, notify, upsert } from "@/lib/db";
 import { useUsers } from "@/lib/queries";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { FileKind, Order, OrderFile } from "@/lib/types";
+import { getUploadUrlFn } from "@/lib/r2Fns";
+import type { FileKind, Order, OrderFile, PcbFileMetadata } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/owner/orders/new")({
@@ -75,9 +77,11 @@ function NewOrder() {
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [showPhone2, setShowPhone2] = useState(false);
-  const [files, setFiles] = useState<OrderFile[]>([]);
+  // Holds both the display metadata and the original File object for upload
+  const [files, setFiles] = useState<Array<{ meta: OrderFile; raw: File }>>([]); 
   const [designerId, setDesignerId] = useState<string>("");
   const [form, setForm] = useState({
     name: "",
@@ -115,12 +119,15 @@ function NewOrder() {
 
   const addFiles = (list: FileList | null) => {
     if (!list) return;
-    const mapped: OrderFile[] = Array.from(list).map((file, i) => ({
-      id: `f-${Date.now()}-${i}`,
-      name: file.name,
-      kind: kindFor(file.name),
-      size: file.size,
-      uploadedAt: new Date().toISOString(),
+    const mapped = Array.from(list).map((file, i) => ({
+      meta: {
+        id: `f-${Date.now()}-${i}`,
+        name: file.name,
+        kind: kindFor(file.name),
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+      } as OrderFile,
+      raw: file,
     }));
     setFiles((prev) => [...prev, ...mapped]);
     toast.success(`${mapped.length} file(s) attached`);
@@ -128,11 +135,70 @@ function NewOrder() {
 
   const submit = async () => {
     setSaving(true);
+    setUploadProgress(null);
     try {
       const existing = await listOrders();
       const code = nextOrderCode(existing);
       const designer = designers.find((d) => d.id === designerId);
       const nowIso = new Date().toISOString();
+
+      // ── Step 1: Upload each file to R2 via presigned PUT URL ──────────────
+      let pcbFile: PcbFileMetadata | undefined;
+      const orderFiles: OrderFile[] = [];
+
+      if (files.length > 0) {
+        setUploadProgress({ done: 0, total: files.length });
+
+        for (let i = 0; i < files.length; i++) {
+          const { meta, raw } = files[i];
+          try {
+            // Get presigned upload URL from the server
+            const { uploadUrl, fileKey } = await getUploadUrlFn({
+              data: {
+                fileName: meta.name,
+                contentType: raw.type || "application/octet-stream",
+                orderCode: code,
+              },
+            });
+
+            // Upload directly to R2 — the large file never touches Vercel
+            const uploadRes = await fetch(uploadUrl, {
+              method: "PUT",
+              body: raw,
+              headers: { "Content-Type": raw.type || "application/octet-stream" },
+            });
+
+            if (!uploadRes.ok) {
+              throw new Error(`R2 upload failed for ${meta.name}: ${uploadRes.status}`);
+            }
+
+            // Save R2 metadata for the primary (first) file
+            if (i === 0) {
+              pcbFile = {
+                fileName: meta.name,
+                fileSize: meta.size,
+                fileType: raw.type || "application/octet-stream",
+                storageKey: fileKey,
+                storageProvider: "cloudflare-r2",
+                uploadedAt: nowIso,
+              };
+            }
+
+            // Keep display metadata (no URL — files live in R2)
+            orderFiles.push({ ...meta, id: `f-${code}-${i}` });
+          } catch (uploadErr) {
+            console.error(uploadErr);
+            toast.error(`Failed to upload ${meta.name}. Order not created.`);
+            setSaving(false);
+            setUploadProgress(null);
+            return;
+          }
+
+          setUploadProgress({ done: i + 1, total: files.length });
+        }
+      }
+
+      // ── Step 2: Save order to Firestore ───────────────────────────────────
       const order = {
         id: `o-${code}`,
         code,
@@ -156,7 +222,8 @@ function NewOrder() {
         status: designer ? "Assigned" : "New",
         designerId: designer?.id,
         designerName: designer?.name,
-        files,
+        files: orderFiles,
+        pcbFile,            // R2 metadata — only set when files were uploaded
         paymentStatus: "Unpaid",
         createdAt: nowIso,
         updatedAt: nowIso,
@@ -186,8 +253,11 @@ function NewOrder() {
       toast.error("Could not create the order");
     } finally {
       setSaving(false);
+      setUploadProgress(null);
     }
   };
+
+  // PcbFileMetadata type is already imported at the top
 
   return (
     <AppShell title="Create New Order" subtitle="Five quick steps from customer to designer handoff">
@@ -336,22 +406,22 @@ function NewOrder() {
               </label>
 
               <div className="mt-4 space-y-2">
-                {files.map((file) => {
-                  const Icon = iconFor(file.kind);
+                {files.map(({ meta }) => {
+                  const Icon = iconFor(meta.kind);
                   return (
-                    <div key={file.id} className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
+                    <div key={meta.id} className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
                       <Icon className="size-4 text-primary" />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{file.name}</span>
+                        <span className="block truncate text-sm font-medium">{meta.name}</span>
                         <span className="block text-xs text-muted-foreground">
-                          {file.kind} · {(file.size / 1024).toFixed(0)} KB
+                          {meta.kind} · {(meta.size / 1024).toFixed(0)} KB
                         </span>
                       </span>
                       <button
                         type="button"
-                        onClick={() => setFiles((prev) => prev.filter((f) => f.id !== file.id))}
+                        onClick={() => setFiles((prev) => prev.filter((f) => f.meta.id !== meta.id))}
                         className="text-muted-foreground hover:text-destructive"
-                        aria-label={`Remove ${file.name}`}
+                        aria-label={`Remove ${meta.name}`}
                       >
                         <Trash2 className="size-4" />
                       </button>
@@ -434,7 +504,12 @@ function NewOrder() {
               </Button>
             ) : (
               <Button className="rounded-xl" disabled={saving} onClick={submit}>
-                {saving ? "Creating…" : "Create order"}
+                {uploadProgress
+                  ? <><Loader2 className="size-4 animate-spin" /> Uploading {uploadProgress.done}/{uploadProgress.total}…</>
+                  : saving
+                    ? "Saving…"
+                    : "Create order"
+                }
               </Button>
             )}
           </div>

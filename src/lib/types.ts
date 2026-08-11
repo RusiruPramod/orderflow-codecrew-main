@@ -38,6 +38,17 @@ export interface OrderFile {
   uploadedAt: string;
 }
 
+/** Metadata saved in Firestore for files stored in Cloudflare R2. */
+export interface PcbFileMetadata {
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  /** R2 object key, e.g. "orders/CC-2601/gerber.zip" */
+  storageKey: string;
+  storageProvider: "cloudflare-r2";
+  uploadedAt: string;
+}
+
 export interface DesignerQuote {
   designCost: number;
   printingCost: number;
@@ -86,6 +97,8 @@ export interface Order {
   designerId?: string;
   designerName?: string;
   files: OrderFile[];
+  /** Primary PCB file stored in Cloudflare R2 (optional — present on new orders). */
+  pcbFile?: PcbFileMetadata;
   quote?: DesignerQuote;
   pricing?: OwnerPricing;
   paymentStatus: "Unpaid" | "Partially Paid" | "Paid";
