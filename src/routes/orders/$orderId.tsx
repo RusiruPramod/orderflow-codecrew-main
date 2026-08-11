@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { RequireRole } from "@/components/require-role";
+import { getDownloadUrlFn } from "@/lib/r2Fns";
 import { PaymentBadge, StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +85,7 @@ function OrderDetail() {
 
   const [pricing, setPricing] = useState({ serviceCharge: 0, profitMargin: 0, extraCharges: 0, discount: 0 });
   const [quoteDraft, setQuoteDraft] = useState(emptyQuote);
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   useEffect(() => {
     if (order?.pricing) setPricing({ ...order.pricing });
@@ -358,19 +360,28 @@ function OrderDetail() {
                       {file.kind} · {(file.size / 1024).toFixed(0)} KB
                     </span>
                   </span>
-                  <a
-                    href={file.url ?? "#"}
-                    onClick={(e) => {
-                      if (!file.url) {
-                        e.preventDefault();
-                        toast.info("File download will stream from Firebase Storage once uploaded.");
+                  <button
+                    type="button"
+                    disabled={downloadingFileId === file.id}
+                    onClick={async () => {
+                      // Check if we have R2 storage metadata
+                      const storageKey = order.pcbFile?.storageKey || `orders/${order.code}/${file.name}`;
+                      try {
+                        setDownloadingFileId(file.id);
+                        const { downloadUrl } = await getDownloadUrlFn({ data: { storageKey } });
+                        window.open(downloadUrl, "_blank");
+                      } catch (err) {
+                        console.error(err);
+                        toast.error("Failed to generate download link");
+                      } finally {
+                        setDownloadingFileId(null);
                       }
                     }}
-                    className="text-muted-foreground hover:text-primary"
+                    className="text-muted-foreground hover:text-primary disabled:opacity-50"
                     aria-label={`Download ${file.name}`}
                   >
                     <Download className="size-4" />
-                  </a>
+                  </button>
                 </div>
               ))}
             </div>
