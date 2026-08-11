@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Filter, Plus, Search, Trash2 } from "lucide-react";
+import { Filter, Plus, Search, Trash2, Edit, RefreshCcw, UserPlus } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { upsert, logActivity, notify } from "@/lib/db";
+import { useUsers } from "@/lib/queries";
+import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { RequireRole } from "@/components/require-role";
 import { PaymentBadge, StatusBadge } from "@/components/status-badge";
@@ -127,7 +131,7 @@ function OrdersPage() {
                 <th className="px-5 py-3 text-right font-medium">Designer cost</th>
                 <th className="px-5 py-3 text-right font-medium">Customer price</th>
                 <th className="px-5 py-3 font-medium">Payment</th>
-                <th className="px-5 py-3"></th>
+                <th className="px-5 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -155,14 +159,61 @@ function OrdersPage() {
                   <td className="px-5 py-3.5">
                     <PaymentBadge status={order.paymentStatus} />
                   </td>
-                  <td className="px-5 py-3.5 text-right">
+                  <td className="px-5 py-3.5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Edit order"
+                      onClick={() => {
+                        navigate({ to: "/orders/$orderId", params: { orderId: order.id } });
+                      }}
+                    >
+                      <Edit className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Assign designer"
+                      onClick={async () => {
+                        const { data: users = [] } = useUsers();
+                        const designers = users.filter((u) => u.role === "designer" && u.active);
+                        const designerId = prompt("Enter designer ID to assign:");
+                        if (!designerId) return;
+                        const designer = designers.find((d) => d.id === designerId);
+                        if (!designer) {
+                          toast.error("Designer not found");
+                          return;
+                        }
+                        await upsert("orders", { ...order, designerId: designer.id, designerName: designer.name, status: order.status === "New" ? "Assigned" : order.status } as any);
+                        await logActivity({ action: "Order Updated", detail: `${order.code} assigned to ${designer.name}`, userName: "Owner", role: "owner" });
+                        await notify({ to: "designer", userId: designer.id, title: "Order assigned", body: `${order.code} assigned to you.`, orderId: order.id });
+                        toast.success(`Assigned to ${designer.name}`);
+                      }}
+                    >
+                      <UserPlus className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Update order"
+                      onClick={async () => {
+                        const WORKFLOW = ["New","Assigned","Under Review","Waiting for Price","Price Submitted","Price Approved","Customer Confirmed","Designing","Printing","Quality Check","Completed","Delivered"];
+                        const currentIndex = WORKFLOW.indexOf(order.status as any);
+                        const nextStatus = WORKFLOW[currentIndex + 1] ?? order.status;
+                        if (nextStatus === order.status) {
+                          toast.warning("Order is already at final status");
+                          return;
+                        }
+                        await upsert("orders", { ...order, status: nextStatus } as any);
+                        await logActivity({ action: "Order Updated", detail: `${order.code} status changed to ${nextStatus}`, userName: "Owner", role: "owner" });
+                        toast.success(`Status updated to ${nextStatus}`);
+                      }}
+                    >
+                      <RefreshCcw className="size-4" />
+                    </button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button
-                          type="button"
-                          className="text-muted-foreground hover:text-destructive transition-colors"
-                          title="Delete order"
-                        >
+                        <button type="button" className="text-muted-foreground hover:text-destructive transition-colors" title="Delete order">
                           <Trash2 className="size-4" />
                         </button>
                       </AlertDialogTrigger>
@@ -175,12 +226,7 @@ function OrdersPage() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => {
-                              import("@/lib/db").then((db) => db.remove("orders", order.id));
-                            }}
-                          >
+                          <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { import("@/lib/db").then((db) => db.remove("orders", order.id)); }}>
                             Delete
                           </AlertDialogAction>
                         </AlertDialogFooter>
