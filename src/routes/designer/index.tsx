@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useOrders } from "@/lib/queries";
 import { formatDate, formatDateTime } from "@/lib/analytics";
 import { money, quoteTotal, type Order } from "@/lib/types";
-import { CircuitBoard, FileText, Download, Phone, UserCog, Layers } from "lucide-react";
+import { CircuitBoard, FileText, Download, Phone, UserCog, Layers, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/designer/")({
   ssr: false,
@@ -96,11 +96,29 @@ function DesignerPortal() {
                   <h3 className="font-display text-xl font-semibold">{selectedOrder.code} - {selectedOrder.title}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Updated {formatDateTime(selectedOrder.updatedAt)}</p>
                 </div>
-                <Button asChild className="rounded-xl">
-                  <Link to="/orders/$orderId" params={{ orderId: selectedOrder.id }}>
-                    Open Full Order
-                  </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                    onClick={() => {
+                      if (confirm("Are you sure you want to delete this order?")) {
+                        import("@/lib/db").then((db) => {
+                          db.remove("orders", selectedOrder.id);
+                          setSelectedId(null);
+                        });
+                      }
+                    }}
+                    title="Delete order"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                  <Button asChild className="rounded-xl">
+                    <Link to="/orders/$orderId" params={{ orderId: selectedOrder.id }}>
+                      Open Full Order
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
               <div className="mt-6 grid gap-6 sm:grid-cols-2">

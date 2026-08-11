@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Filter, Plus, Search } from "lucide-react";
+import { Filter, Plus, Search, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { RequireRole } from "@/components/require-role";
 import { PaymentBadge, StatusBadge } from "@/components/status-badge";
@@ -116,6 +116,7 @@ function OrdersPage() {
                 <th className="px-5 py-3 text-right font-medium">Designer cost</th>
                 <th className="px-5 py-3 text-right font-medium">Customer price</th>
                 <th className="px-5 py-3 font-medium">Payment</th>
+                <th className="px-5 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -142,6 +143,21 @@ function OrdersPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     <PaymentBadge status={order.paymentStatus} />
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm("Are you sure you want to delete this order?")) {
+                          import("@/lib/db").then((db) => db.remove("orders", order.id));
+                        }
+                      }}
+                      title="Delete order"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
