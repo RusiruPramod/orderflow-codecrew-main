@@ -364,23 +364,30 @@ function OrderDetail() {
                     type="button"
                     disabled={downloadingFileId === file.id}
                     onClick={async () => {
-                      // Check if we have R2 storage metadata
                       const storageKey = order.pcbFile?.storageKey || `orders/${order.code}/${file.name}`;
                       try {
                         setDownloadingFileId(file.id);
-                        const { downloadUrl } = await getDownloadUrlFn({ data: { storageKey } });
-                        window.open(downloadUrl, "_blank");
+                        await downloadR2File(storageKey, file.name);
+                        toast.success(`Downloaded ${file.name}`);
                       } catch (err) {
                         console.error(err);
-                        toast.error("Failed to generate download link");
+                        toast.error(`Failed to download ${file.name}`);
                       } finally {
                         setDownloadingFileId(null);
                       }
                     }}
-                    className="text-muted-foreground hover:text-primary disabled:opacity-50"
+                    className="flex items-center gap-1.5 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
                     aria-label={`Download ${file.name}`}
+                    title={`Download ${file.name}`}
                   >
-                    <Download className="size-4" />
+                    {downloadingFileId === file.id ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin text-primary" />
+                        <span className="text-xs text-primary font-medium">Downloading...</span>
+                      </>
+                    ) : (
+                      <Download className="size-4" />
+                    )}
                   </button>
                 </div>
               ))}
