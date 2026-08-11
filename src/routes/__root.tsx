@@ -200,6 +200,13 @@ function RouteGuard() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    import("../lib/db").then((db) => {
+      db.remove("expenses", "e1");
+      db.remove("expenses", "e2");
+    }).catch(console.error);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
