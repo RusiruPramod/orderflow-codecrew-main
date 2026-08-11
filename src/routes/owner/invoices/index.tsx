@@ -6,7 +6,7 @@ import { PaymentBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { useOrders } from "@/lib/queries";
 import { formatDate } from "@/lib/analytics";
-import { finalPrice, money } from "@/lib/types";
+import { invoiceTotal, money } from "@/lib/types";
 
 export const Route = createFileRoute("/owner/invoices/")({
   ssr: false,
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/owner/invoices/")({
 
 function Invoices() {
   const { data: orders = [] } = useOrders();
-  const billable = orders.filter((o) => o.pricing);
+  const billable = orders.filter((o) => o.pricing || o.myPrice !== undefined);
 
   return (
     <AppShell title="Invoices" subtitle={`${billable.length} invoiceable orders`}>
@@ -52,7 +52,7 @@ function Invoices() {
                 <td className="px-5 py-3.5">
                   <PaymentBadge status={order.paymentStatus} />
                 </td>
-                <td className="px-5 py-3.5 text-right font-semibold">{money(finalPrice(order))}</td>
+                <td className="px-5 py-3.5 text-right font-semibold">{money(invoiceTotal(order))}</td>
                 <td className="px-5 py-3.5 text-right">
                   <Button asChild size="sm" variant="outline" className="rounded-xl">
                     <Link to="/owner/invoices/$orderId" params={{ orderId: order.id }}>

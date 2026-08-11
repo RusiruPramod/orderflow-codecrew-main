@@ -6,7 +6,7 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { useOrders } from "@/lib/queries";
 import { formatDate } from "@/lib/analytics";
-import { finalPrice, money, quoteTotal } from "@/lib/types";
+import { invoiceTotal, money, quoteTotal } from "@/lib/types";
 
 export const Route = createFileRoute("/invoices/$orderId")({
   ssr: false,
@@ -32,14 +32,12 @@ function InvoicePage() {
 
   if (!order) return <AppShell title="Invoice">Not found.</AppShell>;
 
-  const lines = [
-    ["PCB design service", order.quote?.designCost ?? 0],
-    ["PCB fabrication / printing", order.quote?.printingCost ?? 0],
-    ["Assembly & sourcing", (order.quote?.assembly ?? 0) + (order.quote?.sourcing ?? 0)],
-    ["Testing & shipping", (order.quote?.testing ?? 0) + (order.quote?.shipping ?? 0)],
-    ["CodeCrew service charge", order.pricing?.serviceCharge ?? 0],
-    ["Engineering & handling", (order.pricing?.profitMargin ?? 0) + (order.pricing?.extraCharges ?? 0)],
-  ] as [string, number][];
+  const designerCost = quoteTotal(order.quote);
+  const myPrice = order.myPrice ?? 0;
+  const lines: [string, number][] = [
+    ["PCB production (designer cost)", designerCost],
+    ["My price / service markup", myPrice],
+  ];
 
   return (
     <AppShell
@@ -94,24 +92,22 @@ function InvoicePage() {
                 <td className="py-2.5 text-right">{money(amount)}</td>
               </tr>
             ))}
-            {(order.pricing?.discount ?? 0) > 0 && (
-              <tr>
-                <td className="py-2.5 text-primary">Discount</td>
-                <td className="py-2.5 text-right text-primary">- {money(order.pricing?.discount ?? 0)}</td>
-              </tr>
-            )}
           </tbody>
         </table>
 
         <div className="mt-4 flex justify-end border-t border-border pt-4">
-          <div className="w-56 space-y-1.5 text-sm">
+          <div className="w-64 space-y-1.5 text-sm">
             <div className="flex justify-between text-muted-foreground">
-              <span>Production cost</span>
-              <span>{money(quoteTotal(order.quote))}</span>
+              <span>Designer cost</span>
+              <span>{money(designerCost)}</span>
             </div>
-            <div className="flex justify-between font-display text-lg font-semibold text-primary">
+            <div className="flex justify-between text-muted-foreground">
+              <span>My price</span>
+              <span>{money(myPrice)}</span>
+            </div>
+            <div className="flex justify-between border-t border-border pt-2 font-display text-lg font-semibold text-primary">
               <span>Total due</span>
-              <span>{money(finalPrice(order))}</span>
+              <span>{money(invoiceTotal(order))}</span>
             </div>
             <p className="text-xs text-muted-foreground">Payment status: {order.paymentStatus}</p>
           </div>

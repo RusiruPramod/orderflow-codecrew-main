@@ -116,6 +116,8 @@ export interface Order {
   };
   pcbLength?: number;
   pcbWidth?: number;
+  /** Owner's direct price added on top of designer cost for the final invoice */
+  myPrice?: number;
 }
 
 export interface AppUser {
@@ -180,6 +182,16 @@ export function finalPrice(order: Order): number {
   const p = order.pricing;
   if (!p) return base;
   return base + p.serviceCharge + p.profitMargin + p.extraCharges - p.discount;
+}
+
+/**
+ * Invoice total = designer cost (quote total) + owner's "My Price".
+ * This is the simplified billing model: owner sets a single markup price.
+ */
+export function invoiceTotal(order: Order): number {
+  const designerCost = quoteTotal(order.quote);
+  const myPrice = order.myPrice ?? 0;
+  return designerCost + myPrice;
 }
 
 export function orderProfit(order: Order): number {

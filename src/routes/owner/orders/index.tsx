@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { formatDate } from "@/lib/analytics";
-import { finalPrice, money, quoteTotal, type Order, type OrderStatus } from "@/lib/types";
+import { invoiceTotal, money, quoteTotal, type Order, type OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/owner/orders/")({
@@ -293,6 +293,8 @@ function OrdersPage() {
   // Dialog state
   const [assignTarget, setAssignTarget] = useState<Order | null>(null);
   const [updateTarget, setUpdateTarget] = useState<Order | null>(null);
+  // Inline My Price editing: map of orderId → draft string value
+  const [myPriceEdits, setMyPriceEdits] = useState<Record<string, string>>({});
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -326,6 +328,30 @@ function OrdersPage() {
       toast.success(`Order ${order.code} deleted`);
     } catch {
       toast.error("Failed to delete order");
+    }
+  };
+
+  const saveMyPrice = async (order: Order, raw: string) => {
+    const val = parseFloat(raw);
+    if (isNaN(val) || val < 0) {
+      // reset draft to current saved value
+      setMyPriceEdits((prev) => ({ ...prev, [order.id]: String(order.myPrice ?? "") }));
+      return;
+    }
+    try {
+      await upsert<Order>("orders", { ...order, myPrice: val, updatedAt: new Date().toISOString() });
+      await logActivity({
+        action: "My Price Set",
+        detail: `${order.code} my price set to ${money(val)}`,
+        userName: "Owner",
+        role: "owner",
+      });
+      refresh();
+      toast.success(`My Price saved as ${money(val)}`);
+    } catch {
+      toast.error("Failed to save price");
+    } finally {
+      setMyPriceEdits((prev) => { const n = { ...prev }; delete n[order.id]; return n; });
     }
   };
 
@@ -409,7 +435,8 @@ function OrdersPage() {
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Created</th>
                   <th className="px-5 py-3 text-right font-medium">Designer cost</th>
-                  <th className="px-5 py-3 text-right font-medium">Customer price</th>
+                  <th className="px-5 py-3 text-right font-medium">My Price</th>
+                  <th className="px-5 py-3 text-right font-medium">Invoice total</th>
                   <th className="px-5 py-3 font-medium">Payment</th>
                   <th className="px-5 py-3 font-medium">Actions</th>
                 </tr>
@@ -433,8 +460,36 @@ function OrdersPage() {
                     </td>
                     <td className="px-5 py-3.5 text-muted-foreground">{formatDate(order.createdAt)}</td>
                     <td className="px-5 py-3.5 text-right">{order.quote ? money(quoteTotal(order.quote)) : "—"}</td>
-                    <td className="px-5 py-3.5 text-right font-semibold">
-                      {order.pricing ? money(finalPrice(order)) : "—"}
+                    {/* My Price — inline editable */}
+                    <td className="px-5 py-3.5 text-right">
+                      <input
+                        id={`my-price-${order.id}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={
+                          myPriceEdits[order.id] !== undefined
+                            ? myPriceEdits[order.id]
+                            : (order.myPrice ?? "")
+                        }
+                        onChange={(e) =>
+                          setMyPriceEdits((prev) => ({ ...prev, [order.id]: e.target.value }))
+                        }
+                        onBlur={(e) => void saveMyPrice(order, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                          if (e.key === "Escape") {
+                            setMyPriceEdits((prev) => { const n = { ...prev }; delete n[order.id]; return n; });
+                            (e.target as HTMLInputElement).blur();
+                          }
+                        }}
+                        className="w-24 rounded-lg border border-border bg-background px-2 py-1 text-right text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </td>
+                    {/* Invoice total = designer cost + my price */}
+                    <td className="px-5 py-3.5 text-right font-semibold text-primary">
+                      {order.quote || order.myPrice ? money(invoiceTotal(order)) : "—"}
                     </td>
                     <td className="px-5 py-3.5">
                       <PaymentBadge status={order.paymentStatus} />
@@ -515,7 +570,7 @@ function OrdersPage() {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-5 py-16 text-center text-muted-foreground">
+                    <td colSpan={10} className="px-5 py-16 text-center text-muted-foreground">
                       No orders match this filter.
                     </td>
                   </tr>
