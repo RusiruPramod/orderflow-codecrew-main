@@ -173,10 +173,8 @@ function CustomerOrderForm() {
           deliveryFee: settings.deliveryFee,
           stickerFee: settings.stickerFee,
           stickerOption: form.stickerOption === "With Sticker" ? "with" : "without",
-          pcbPrintPrice,
+          pcbPrintPrice: 0,
         },
-        pcbLength: parsedLength,
-        pcbWidth: parsedWidth,
       };
 
       await upsert<Order>("orders", order);
@@ -388,22 +386,11 @@ function CustomerOrderForm() {
 
               <div className="space-y-3 text-sm relative z-10">
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-muted-foreground flex items-center gap-2">
-                    PCB Print Cost
-                    {parsedLength > 0 && parsedWidth > 0 && (
-                      <span className="text-[10px] bg-secondary px-2 py-0.5 rounded-full">
-                        {parsedLength}″ × {parsedWidth}″ @ {settings.pricePerSqInch}/sq in
-                      </span>
-                    )}
-                  </span>
+                  <span className="text-muted-foreground">PCB Print Cost</span>
                   <span className="font-medium text-muted-foreground flex items-center h-full">
-                    {(parsedLength === 0 || parsedWidth === 0) ? (
-                      <div className="w-16 h-1.5 bg-primary/10 rounded-full overflow-hidden relative">
-                        <div className="absolute top-0 bottom-0 bg-primary/50 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s infinite ease-in-out' }} />
-                      </div>
-                    ) : (
-                      <span className="text-foreground">{moneyLKR(pcbPrintPrice)}</span>
-                    )}
+                    <div className="w-16 h-1.5 bg-primary/10 rounded-full overflow-hidden relative">
+                      <div className="absolute top-0 bottom-0 bg-primary/50 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s infinite ease-in-out' }} />
+                    </div>
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-1">
