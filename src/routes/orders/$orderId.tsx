@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { RequireRole } from "@/components/require-role";
-import { getDownloadUrlFn } from "@/lib/r2Fns";
+import { downloadR2File, getDownloadUrlFn } from "@/lib/r2Fns";
 import { PaymentBadge, StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
