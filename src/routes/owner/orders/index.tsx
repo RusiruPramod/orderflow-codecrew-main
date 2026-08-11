@@ -6,6 +6,17 @@ import { RequireRole } from "@/components/require-role";
 import { PaymentBadge, StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useOrders } from "@/lib/queries";
 import { formatDate } from "@/lib/analytics";
 import { finalPrice, money, ORDER_STATUSES, quoteTotal, type OrderStatus } from "@/lib/types";
@@ -145,19 +156,36 @@ function OrdersPage() {
                     <PaymentBadge status={order.paymentStatus} />
                   </td>
                   <td className="px-5 py-3.5 text-right">
-                    <button
-                      type="button"
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm("Are you sure you want to delete this order?")) {
-                          import("@/lib/db").then((db) => db.remove("orders", order.id));
-                        }
-                      }}
-                      title="Delete order"
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-destructive transition-colors"
+                          title="Delete order"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure you want to delete this order?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the order {order.code}.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => {
+                              import("@/lib/db").then((db) => db.remove("orders", order.id));
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </td>
                 </tr>
               ))}

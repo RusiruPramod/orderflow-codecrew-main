@@ -4,6 +4,17 @@ import { AppShell } from "@/components/app-shell";
 import { RequireRole } from "@/components/require-role";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth";
 import { useOrders } from "@/lib/queries";
 import { formatDate, formatDateTime } from "@/lib/analytics";
@@ -97,22 +108,40 @@ function DesignerPortal() {
                   <p className="mt-1 text-sm text-muted-foreground">Updated {formatDateTime(selectedOrder.updatedAt)}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                    onClick={() => {
-                      if (confirm("Are you sure you want to delete this order?")) {
-                        import("@/lib/db").then((db) => {
-                          db.remove("orders", selectedOrder.id);
-                          setSelectedId(null);
-                        });
-                      }
-                    }}
-                    title="Delete order"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        title="Delete order"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to delete this order?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the order {selectedOrder.code}.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => {
+                            import("@/lib/db").then((db) => {
+                              db.remove("orders", selectedOrder.id);
+                              setSelectedId(null);
+                            });
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   <Button asChild className="rounded-xl">
                     <Link to="/orders/$orderId" params={{ orderId: selectedOrder.id }}>
                       Open Full Order
