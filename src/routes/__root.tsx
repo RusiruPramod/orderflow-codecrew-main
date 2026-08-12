@@ -144,10 +144,22 @@ function RouteGuard() {
   useEffect(() => {
     if (loading || !firebaseReady || !authInitialized) return;
 
+    // Public paths — accessible without authentication
+    const isPublicPath =
+      pathname === "/" ||
+      pathname === "/login" ||
+      pathname.startsWith("/customer-order");
+
     if (!user) {
-      if (pathname !== "/" && !pathname.startsWith("/customer-order")) {
-        void navigate({ to: "/", replace: true });
+      if (!isPublicPath) {
+        void navigate({ to: "/login", replace: true });
       }
+      return;
+    }
+
+    // Logged-in users visiting the public landing or login → send to dashboard
+    if (pathname === "/" || pathname === "/login") {
+      void navigate({ to: getRoleHomePath(user.role), replace: true });
       return;
     }
 
@@ -170,11 +182,6 @@ function RouteGuard() {
     const isSharedPath = sharedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
     const isOrderDetailsPath = pathname.startsWith("/orders/") && pathname !== "/orders/new";
     const isRoleHomePath = pathname === getRoleHomePath(user.role);
-
-    if (pathname === "/") {
-      void navigate({ to: getRoleHomePath(user.role), replace: true });
-      return;
-    }
 
     if (pathname === "/designer/designer") {
       void navigate({ to: "/designer", replace: true });

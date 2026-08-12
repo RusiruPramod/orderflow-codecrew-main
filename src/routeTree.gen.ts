@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CustomerOrderRouteImport } from './routes/customer-order'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as DesignerIndexRouteImport } from './routes/designer/index'
 import { Route as DesignerNotificationsRouteImport } from './routes/designer/notifications'
 import { Route as DesignerSettingsRouteImport } from './routes/designer/settings'
@@ -33,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
 const CustomerOrderRoute = CustomerOrderRouteImport.update({
   id: '/customer-order',
   path: '/customer-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignerIndexRoute = DesignerIndexRouteImport.update({
@@ -104,6 +110,7 @@ const OwnerOrdersNewRoute = OwnerOrdersNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/customer-order': typeof CustomerOrderRoute
+  '/login': typeof LoginRoute
   '/designer/notifications': typeof DesignerNotificationsRoute
   '/designer/settings': typeof DesignerSettingsRoute
   '/invoices/$orderId': typeof InvoicesOrderIdRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/customer-order': typeof CustomerOrderRoute
+  '/login': typeof LoginRoute
   '/designer/notifications': typeof DesignerNotificationsRoute
   '/designer/settings': typeof DesignerSettingsRoute
   '/invoices/$orderId': typeof InvoicesOrderIdRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/customer-order': typeof CustomerOrderRoute
+  '/login': typeof LoginRoute
   '/designer/notifications': typeof DesignerNotificationsRoute
   '/designer/settings': typeof DesignerSettingsRoute
   '/invoices/$orderId': typeof InvoicesOrderIdRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/customer-order'
+    | '/login'
     | '/designer/notifications'
     | '/designer/settings'
     | '/invoices/$orderId'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/customer-order'
+    | '/login'
     | '/designer/notifications'
     | '/designer/settings'
     | '/invoices/$orderId'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/customer-order'
+    | '/login'
     | '/designer/notifications'
     | '/designer/settings'
     | '/invoices/$orderId'
@@ -210,6 +222,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustomerOrderRoute: typeof CustomerOrderRoute
+  LoginRoute: typeof LoginRoute
   DesignerNotificationsRoute: typeof DesignerNotificationsRoute
   DesignerSettingsRoute: typeof DesignerSettingsRoute
   InvoicesOrderIdRoute: typeof InvoicesOrderIdRoute
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       path: '/customer-order'
       fullPath: '/customer-order'
       preLoaderRoute: typeof CustomerOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/designer/': {
@@ -338,6 +358,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomerOrderRoute: CustomerOrderRoute,
+  LoginRoute: LoginRoute,
   DesignerNotificationsRoute: DesignerNotificationsRoute,
   DesignerSettingsRoute: DesignerSettingsRoute,
   InvoicesOrderIdRoute: InvoicesOrderIdRoute,
